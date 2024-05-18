@@ -1,5 +1,5 @@
-const testJson = require('./test.json');
-const jsonMarshal = require('./lib');
+const testJson = require('../../test.json');
+const jsonMarshal = require('json-marshal');
 const fastJsonStableStringify = require('fast-json-stable-stringify');
 
 describe('stringify', () => {
@@ -15,11 +15,17 @@ describe('stringify', () => {
     });
   });
 
-  test('json-marshal', measure => {
+  test('json-marshal / stable', measure => {
     const options = { stable: true };
 
     measure(() => {
       jsonMarshal.stringify(testJson, options);
+    });
+  });
+
+  test('json-marshal / unstable', measure => {
+    measure(() => {
+      jsonMarshal.stringify(testJson);
     });
   });
 });
