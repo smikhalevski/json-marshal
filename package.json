@@ -15,7 +15,7 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "rollup --config && cp package.json README.md LICENSE.txt lib/ && cd lib && npm pkg delete scripts devDependencies",
+    "build": "rollup --config && rimraf --glob 'lib/!(index).d.ts' && cp package.json README.md LICENSE.txt lib/ && cd lib && npm pkg delete scripts devDependencies",
     "clean": "rimraf lib docs coverage",
     "test": "jest",
     "perf": "toofast"
