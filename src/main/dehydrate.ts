@@ -126,7 +126,7 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Stringify
     }
 
     if (options.stable) {
-      const valueStrs: string[] = [];
+      const valueStrs = [];
 
       for (value of input) {
         if ((valueStr = dehydrate(value, refs, options)) === DISCARDED) {
@@ -164,7 +164,7 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Stringify
     }
 
     if (options.stable) {
-      const keyValueStrs: [string, string][] = [];
+      const keyValueStrs = [];
 
       for (key of input.keys()) {
         if (
@@ -173,19 +173,12 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Stringify
         ) {
           continue;
         }
-        keyValueStrs.push([keyStr, valueStr]);
+        keyValueStrs.push('[' + keyStr + ',' + valueStr + ']');
       }
 
-      if (keyValueStrs.length !== 0) {
-        keyValueStrs.sort(compareKeyValueStrs);
-
-        for ([keyStr, valueStr] of keyValueStrs) {
-          if (separated) {
-            str += ',';
-          }
-          separated = true;
-          str += '[' + keyStr + ',' + valueStr + ']';
-        }
+      if ((separated = keyValueStrs.length !== 0)) {
+        keyValueStrs.sort();
+        str += keyValueStrs.join(',');
       }
     } else {
       for (key of input.keys()) {
@@ -234,8 +227,4 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Stringify
   }
 
   return '{' + str + '}';
-}
-
-function compareKeyValueStrs(left: [string, string], right: [string, string]): number {
-  return left[0] === right[0] ? 0 : left[0] < right[0] ? -1 : 1;
 }

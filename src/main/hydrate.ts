@@ -46,7 +46,12 @@ export function hydrate(input: any, refs: Map<number, any>, options: ParseOption
 
   switch (tag) {
     case Tag.REF:
-      return refs.get(input[1]);
+      value = refs.get(input[1]);
+
+      if (value === undefined) {
+        throw new Error('Illegal reference: ' + input[1]);
+      }
+      return value;
 
     case Tag.UNDEFINED:
       return undefined;
@@ -104,11 +109,14 @@ export function hydrate(input: any, refs: Map<number, any>, options: ParseOption
   }
 
   if (options.adapters !== undefined) {
+    value = hydrate(input[1], refs, options);
+
     for (const adapter of options.adapters) {
-      if ((value = adapter.deserialize(tag, input[1])) !== undefined) {
-        return hydrate(value, refs, options);
+      if ((input = adapter.deserialize(tag, value)) !== undefined) {
+        return input;
       }
     }
   }
+
   throw new Error('Unrecognized tag: ' + tag);
 }

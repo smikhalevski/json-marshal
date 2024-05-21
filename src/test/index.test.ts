@@ -1,5 +1,5 @@
-import testJson from './test.json';
 import { parse, stringify } from '../main';
+import testJson from './test.json';
 import arrayBufferAdapter from '../main/adapter/arrayBuffer';
 
 describe('stringify', () => {
@@ -129,7 +129,9 @@ describe('parse', () => {
 
   test('ArrayBuffer', () => {
     const aaa = new ArrayBuffer(5);
-    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), { adapters: [arrayBufferAdapter()] });
+    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), {
+      adapters: [arrayBufferAdapter()],
+    });
 
     expect(xxx).toBeInstanceOf(ArrayBuffer);
     expect(xxx.byteLength).toBe(aaa.byteLength);
@@ -140,7 +142,9 @@ describe('parse', () => {
       BigInt('111111111111111111111111111111'),
       BigInt('222222222222222222222222222222'),
     ]);
-    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), { adapters: [arrayBufferAdapter()] });
+    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), {
+      adapters: [arrayBufferAdapter()],
+    });
 
     expect(xxx).toBeInstanceOf(BigUint64Array);
     expect(xxx.length).toBe(2);
