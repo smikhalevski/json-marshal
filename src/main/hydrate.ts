@@ -1,184 +1,114 @@
-import { decodeBase64 } from './base64';
 import { Tag } from './Tag';
+import type { ParseOptions } from './types';
 
-export function hydrate(value: any, refs: Map<number, any>): any {
-  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return value;
+export function hydrate(input: any, refs: Map<number, any>, options: ParseOptions): any {
+  if (input === null || typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {
+    return input;
   }
 
-  const index = refs.size;
+  const refsSize = refs.size;
 
-  if (!Array.isArray(value)) {
-    refs.set(index, value);
+  // Object
+  if (!Array.isArray(input)) {
+    refs.set(refsSize, input);
 
-    for (const key in value) {
-      const item = value[key];
+    for (const key in input) {
+      const value = input[key];
 
-      if (item !== null && typeof item === 'object') {
-        value[key] = hydrate(item, refs);
+      if (value !== null && typeof value === 'object') {
+        input[key] = hydrate(value, refs, options);
       }
     }
 
-    return value;
+    return input;
   }
 
-  if (value.length === 0) {
-    refs.set(index, value);
-    return value;
+  // Zero-length array
+  if (input.length === 0) {
+    refs.set(refsSize, input);
+    return input;
   }
 
-  const tag = value[0];
+  const tag = input[0];
 
-  if (typeof tag !== 'number' || (tag | 0) !== tag) {
-    refs.set(index, value);
+  // Non-encoded array
+  if (typeof tag !== 'number' || (tag | 0) !== tag || tag < 0) {
+    refs.set(refsSize, input);
 
-    for (let i = 0; i < value.length; ++i) {
-      value[i] = hydrate(value[i], refs);
+    for (let index = 0; index < input.length; ++index) {
+      input[index] = hydrate(input[index], refs, options);
     }
-    return value;
+    return input;
   }
 
-  let items;
+  let value;
+  let values;
 
   switch (tag) {
     case Tag.REF:
-      value = refs.get(value[1]);
-      break;
+      return refs.get(input[1]);
 
     case Tag.UNDEFINED:
-      value = undefined;
-      break;
+      return undefined;
 
     case Tag.NAN:
-      value = NaN;
-      break;
+      return NaN;
 
     case Tag.POSITIVE_INFINITY:
-      value = Infinity;
-      break;
+      return Infinity;
 
     case Tag.NEGATIVE_INFINITY:
-      value = -Infinity;
-      break;
+      return -Infinity;
 
     case Tag.BIGINT:
-      value = BigInt(value[1]);
-      break;
-
-    case Tag.DATE:
-      value = new Date(value[1]);
-      refs.set(index, value);
-      break;
-
-    case Tag.REGEXP:
-      value = new RegExp(value[1], value[2]);
-      refs.set(index, value);
-      break;
+      return BigInt(input[1]);
 
     case Tag.ARRAY:
-      value = value[1];
-      refs.set(index, value);
+      input = input[1];
+      refs.set(refsSize, input);
 
-      for (let i = 0; i < value.length; ++i) {
-        value[i] = hydrate(value[i], refs);
+      for (let index = 0; index < input.length; ++index) {
+        input[index] = hydrate(input[index], refs, options);
       }
-      break;
-
-    case Tag.INT8_ARRAY:
-    case Tag.UINT8_ARRAY:
-    case Tag.UINT8_CLAMPED_ARRAY:
-    case Tag.INT16_ARRAY:
-    case Tag.UINT16_ARRAY:
-    case Tag.INT32_ARRAY:
-    case Tag.UINT32_ARRAY:
-    case Tag.FLOAT32_ARRAY:
-    case Tag.FLOAT64_ARRAY:
-    case Tag.BIGINT64_ARRAY:
-    case Tag.BIGUINT64_ARRAY:
-    case Tag.DATA_VIEW:
-      value = new viewConstructors[tag](decodeBase64(value[1]));
-      refs.set(index, value);
-      break;
-
-    case Tag.ARRAY_BUFFER:
-      value = decodeBase64(value[1]);
-      refs.set(index, value);
-      break;
-
-    case Tag.ERROR:
-    case Tag.EVAL_ERROR:
-    case Tag.RANGE_ERROR:
-    case Tag.REFERENCE_ERROR:
-    case Tag.SYNTAX_ERROR:
-    case Tag.TYPE_ERROR:
-    case Tag.URI_ERROR:
-      value = new errorConstructors[tag](value[1]);
-      refs.set(index, value);
-      break;
-
-    case Tag.DOM_EXCEPTION:
-      value = new DOMException(value[1], value[2]);
-      refs.set(index, value);
-      break;
+      return input;
 
     case Tag.SET:
-      if (value.length === 2) {
-        items = value[1];
+      if (input.length === 2) {
+        values = input[1];
       }
 
-      value = new Set();
-      refs.set(index, value);
+      input = new Set();
+      refs.set(refsSize, input);
 
-      if (items !== undefined) {
-        for (const item of items) {
-          value.add(hydrate(item, refs));
+      if (values !== undefined) {
+        for (value of values) {
+          input.add(hydrate(value, refs, options));
         }
       }
-      break;
+      return input;
 
     case Tag.MAP:
-      if (value.length === 2) {
-        items = value[1];
+      if (input.length === 2) {
+        values = input[1];
       }
 
-      value = new Map();
-      refs.set(index, value);
+      input = new Map();
+      refs.set(refsSize, input);
 
-      if (items !== undefined) {
-        for (const item of items) {
-          value.set(hydrate(item[0], refs), hydrate(item[1], refs));
+      if (values !== undefined) {
+        for (value of values) {
+          input.set(hydrate(value[0], refs, options), hydrate(value[1], refs, options));
         }
       }
-      break;
-
-    default:
-      throw new Error('Unrecognized tag');
+      return input;
   }
 
-  return value;
+  if (options.adapters !== undefined) {
+    for (const adapter of options.adapters) {
+      if ((value = adapter.deserialize(tag, input[1])) !== undefined) {
+        return hydrate(value, refs, options);
+      }
+    }
+  }
+  throw new Error('Unrecognized tag: ' + tag);
 }
-
-const viewConstructors: { [tag: number]: new (arrayBuffer: ArrayBuffer) => unknown } = {
-  [Tag.INT8_ARRAY]: Int8Array,
-  [Tag.UINT8_ARRAY]: Uint8Array,
-  [Tag.UINT8_CLAMPED_ARRAY]: Uint8ClampedArray,
-  [Tag.INT16_ARRAY]: Int16Array,
-  [Tag.UINT16_ARRAY]: Uint16Array,
-  [Tag.INT32_ARRAY]: Int32Array,
-  [Tag.UINT32_ARRAY]: Uint32Array,
-  [Tag.FLOAT32_ARRAY]: Float32Array,
-  [Tag.FLOAT64_ARRAY]: Float64Array,
-  [Tag.BIGINT64_ARRAY]: typeof BigInt64Array !== 'undefined' ? BigInt64Array : DataView,
-  [Tag.BIGUINT64_ARRAY]: typeof BigUint64Array !== 'undefined' ? BigUint64Array : DataView,
-  [Tag.DATA_VIEW]: DataView,
-};
-
-const errorConstructors: { [tag: number]: ErrorConstructor } = {
-  [Tag.ERROR]: Error,
-  [Tag.EVAL_ERROR]: EvalError,
-  [Tag.RANGE_ERROR]: RangeError,
-  [Tag.REFERENCE_ERROR]: ReferenceError,
-  [Tag.SYNTAX_ERROR]: SyntaxError,
-  [Tag.TYPE_ERROR]: TypeError,
-  [Tag.URI_ERROR]: URIError,
-};

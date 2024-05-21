@@ -4,6 +4,6 @@
     "targetRme": 0.005
   },
   "include": [
-    "./index.perf.js"
+    "./src/test/*.perf.js"
   ]
 }

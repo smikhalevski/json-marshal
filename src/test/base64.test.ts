@@ -33,51 +33,27 @@ function rangeArrayBuffer(): ArrayBuffer {
   return bytes.buffer;
 }
 
-describe('encode', () => {
-  test('encode "Hello world"', () => {
-    expect(encodeBase64(stringArrayBuffer('Hello world'))).toBe('SGVsbG8gd29ybGQ=');
-  });
-
-  test('encode "Man"', () => {
-    expect(encodeBase64(stringArrayBuffer('Man'))).toBe('TWFu');
-  });
-
-  test('encode "Ma"', () => {
-    expect(encodeBase64(stringArrayBuffer('Ma'))).toBe('TWE=');
-  });
-
-  test('encode "Hello worlds!"', () => {
-    expect(encodeBase64(stringArrayBuffer('Hello worlds!'))).toBe('SGVsbG8gd29ybGRzIQ==');
-  });
-
-  test('encode all binary characters', () => {
-    expect(encodeBase64(rangeArrayBuffer())).toBe(
-      'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
-    );
-  });
+test('encodeBase64', () => {
+  expect(encodeBase64(stringArrayBuffer('Hello world'))).toBe('SGVsbG8gd29ybGQ=');
+  expect(encodeBase64(stringArrayBuffer('Man'))).toBe('TWFu');
+  expect(encodeBase64(stringArrayBuffer('Ma'))).toBe('TWE=');
+  expect(encodeBase64(stringArrayBuffer('Hello worlds!'))).toBe('SGVsbG8gd29ybGRzIQ==');
+  expect(encodeBase64(rangeArrayBuffer())).toBe(
+    'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
+  );
 });
 
-describe('decode', () => {
-  test('decode "Man"', () => {
-    expect(isEqual(decodeBase64('TWFu'), stringArrayBuffer('Man'))).toBe(true);
-  });
-
-  test('decode "Hello world"', () => {
-    expect(isEqual(decodeBase64('SGVsbG8gd29ybGQ='), stringArrayBuffer('Hello world'))).toBe(true);
-  });
-
-  test('decode "Hello worlds!"', () => {
-    expect(isEqual(decodeBase64('SGVsbG8gd29ybGRzIQ=='), stringArrayBuffer('Hello worlds!'))).toBe(true);
-  });
-
-  test('decode all binary characters', () => {
-    expect(
-      isEqual(
-        decodeBase64(
-          'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
-        ),
-        rangeArrayBuffer()
-      )
-    ).toBe(true);
-  });
+describe('decodeBase64', () => {
+  expect(isEqual(decodeBase64('TWFu'), stringArrayBuffer('Man'))).toBe(true);
+  expect(isEqual(decodeBase64('TWE='), stringArrayBuffer('Ma'))).toBe(true);
+  expect(isEqual(decodeBase64('SGVsbG8gd29ybGQ='), stringArrayBuffer('Hello world'))).toBe(true);
+  expect(isEqual(decodeBase64('SGVsbG8gd29ybGRzIQ=='), stringArrayBuffer('Hello worlds!'))).toBe(true);
+  expect(
+    isEqual(
+      decodeBase64(
+        'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
+      ),
+      rangeArrayBuffer()
+    )
+  ).toBe(true);
 });

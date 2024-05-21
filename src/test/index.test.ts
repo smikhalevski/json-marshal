@@ -1,5 +1,6 @@
+import testJson from './test.json';
 import { parse, stringify } from '../main';
-import testJson from '../../test.json';
+import arrayBufferAdapter from '../main/adapter/arrayBuffer';
 
 describe('stringify', () => {
   test('circular 1', () => {
@@ -45,7 +46,7 @@ describe('stringify', () => {
     expect(stringify([])).toBe('[]');
     expect(stringify(['aaa'])).toBe('["aaa"]');
     expect(stringify([111])).toBe('[8,[111]]');
-    expect(stringify([-222])).toBe('[8,[-222]]');
+    expect(stringify([-222])).toBe('[-222]');
   });
 
   test('Map', () => {
@@ -59,7 +60,7 @@ describe('stringify', () => {
   });
 
   test('ArrayBuffer', () => {
-    expect(stringify(new ArrayBuffer(5))).toBe('[23,"AAAAAAA="]');
+    expect(stringify(new ArrayBuffer(5), { adapters: [arrayBufferAdapter()] })).toBe('[23,"AAAAAAA="]');
   });
 
   test('BigUint64Array', () => {
@@ -68,7 +69,7 @@ describe('stringify', () => {
       BigInt('222222222222222222222222222222'),
     ]);
 
-    expect(stringify(aaa)).toBe('[21,"x3EcBxrFfrKO4zgONIr9ZA=="]');
+    expect(stringify(aaa, { adapters: [arrayBufferAdapter()] })).toBe('[21,"x3EcBxrFfrKO4zgONIr9ZA=="]');
   });
 });
 
@@ -128,7 +129,7 @@ describe('parse', () => {
 
   test('ArrayBuffer', () => {
     const aaa = new ArrayBuffer(5);
-    const xxx = parse(stringify(aaa));
+    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), { adapters: [arrayBufferAdapter()] });
 
     expect(xxx).toBeInstanceOf(ArrayBuffer);
     expect(xxx.byteLength).toBe(aaa.byteLength);
@@ -139,7 +140,7 @@ describe('parse', () => {
       BigInt('111111111111111111111111111111'),
       BigInt('222222222222222222222222222222'),
     ]);
-    const xxx = parse(stringify(aaa));
+    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), { adapters: [arrayBufferAdapter()] });
 
     expect(xxx).toBeInstanceOf(BigUint64Array);
     expect(xxx.length).toBe(2);

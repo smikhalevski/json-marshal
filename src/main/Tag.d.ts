@@ -10,7 +10,6 @@ export const enum Tag {
   ARRAY,
   SET,
   MAP,
-
   INT8_ARRAY,
   UINT8_ARRAY,
   UINT8_CLAMPED_ARRAY,
@@ -24,7 +23,6 @@ export const enum Tag {
   BIGUINT64_ARRAY,
   DATA_VIEW,
   ARRAY_BUFFER,
-
   ERROR,
   EVAL_ERROR,
   RANGE_ERROR,

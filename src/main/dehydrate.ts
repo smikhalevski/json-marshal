@@ -1,255 +1,215 @@
-import { encodeBase64 } from './base64';
-import { StringifyOptions } from './index';
+import type { StringifyOptions } from './types';
 import { Tag } from './Tag';
 
-export function dehydrate(value: any, refs: Map<any, number>, options: StringifyOptions): string | undefined {
-  if (value === null) {
+export const DISCARDED = Symbol('discarded');
+
+export function dehydrate(input: any, refs: Map<any, number>, options: StringifyOptions): string | typeof DISCARDED {
+  let tag;
+  let str = '';
+  let key;
+  let keyStr;
+  let value;
+  let valueStr;
+  let separated = false;
+
+  if (input === DISCARDED) {
+    return DISCARDED;
+  }
+
+  if (input === null) {
     return 'null';
   }
 
-  if (value === undefined) {
-    if (options.preserveUndefined) {
-      return '[' + Tag.UNDEFINED + ']';
-    }
-    return;
+  if (input === undefined) {
+    return '[' + Tag.UNDEFINED + ']';
   }
 
-  if (typeof value === 'string') {
-    return JSON.stringify(value);
+  if (typeof input === 'string') {
+    return JSON.stringify(input);
   }
 
-  if (typeof value === 'number') {
-    if (value !== value) {
+  if (typeof input === 'number') {
+    if (input !== input) {
       return '[' + Tag.NAN + ']';
     }
-    if (value === Infinity) {
+    if (input === Infinity) {
       return '[' + Tag.POSITIVE_INFINITY + ']';
     }
-    if (value === -Infinity) {
+    if (input === -Infinity) {
       return '[' + Tag.NEGATIVE_INFINITY + ']';
     }
-    return value.toString();
+    return String(input);
   }
 
-  if (typeof value === 'boolean') {
-    return value ? 'true' : 'false';
+  if (typeof input === 'boolean') {
+    return input ? 'true' : 'false';
   }
 
-  if (typeof value === 'bigint') {
-    return '[' + Tag.BIGINT + ',"' + value.toString() + '"]';
+  if (typeof input === 'bigint') {
+    return '[' + Tag.BIGINT + ',"' + input + '"]';
   }
 
-  if (typeof value === 'function' || typeof value === 'symbol') {
-    return undefined;
+  if (options.adapters !== undefined) {
+    for (const adapter of options.adapters) {
+      if (typeof (tag = adapter.getTag(input)) !== 'number' || (tag | 0) !== tag) {
+        throw new Error('Illegal tag: ' + String(tag));
+      }
+      if (tag < 0) {
+        continue;
+      }
+      if ((value = adapter.serialize(tag, input)) === input) {
+        break;
+      }
+      if ((valueStr = dehydrate(value, refs, options)) === DISCARDED) {
+        return DISCARDED;
+      }
+      return '[' + tag + ',' + valueStr + ']';
+    }
+  }
+
+  if (typeof input.toJSON === 'function') {
+    return dehydrate(input.toJSON(), refs, options);
   }
 
   if (
-    value instanceof String ||
-    value instanceof Number ||
-    value instanceof Symbol ||
-    value instanceof Boolean ||
-    (typeof BigInt !== 'undefined' && value instanceof BigInt)
+    typeof input === 'object' &&
+    ((typeof BigInt !== 'undefined' && input instanceof BigInt) ||
+      input instanceof String ||
+      input instanceof Number ||
+      input instanceof Boolean ||
+      input instanceof Symbol)
   ) {
-    return dehydrate(value.valueOf(), refs, options);
+    return dehydrate(input.valueOf(), refs, options);
   }
 
-  if (typeof value.toJSON === 'function') {
-    return dehydrate(value.toJSON(), refs, options);
+  if (typeof input === 'function' || typeof input === 'symbol') {
+    return DISCARDED;
   }
 
-  const ref = refs.get(value);
-
+  const ref = refs.get(input);
   if (ref !== undefined) {
     return '[' + Tag.REF + ',' + ref + ']';
   }
 
-  refs.set(value, refs.size);
+  refs.set(input, refs.size);
 
-  let tag;
-  let json = '';
-  let separated = false;
-
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
+  if (Array.isArray(input)) {
+    if (input.length === 0) {
       return '[]';
     }
 
-    for (let i = 0; i < value.length; ++i) {
-      if (i !== 0) {
-        json += ',';
+    for (let index = 0; index < input.length; ++index) {
+      if ((valueStr = dehydrate(input[index], refs, options)) === DISCARDED) {
+        continue;
       }
-      json += dehydrate(value[i], refs, options) || 'null';
+      if (separated) {
+        str += ',';
+      }
+      separated = true;
+      str += valueStr;
+    }
+
+    if (!separated) {
+      return '[]';
     }
 
     // Prevent excessive array encoding
-    tag = value[0];
-    if (typeof tag !== 'number' || (tag | 0) !== tag) {
-      return '[' + json + ']';
+    if (typeof (tag = input[0]) !== 'number' || (tag | 0) !== tag || tag < 0) {
+      return '[' + str + ']';
     }
-
-    return '[' + Tag.ARRAY + ',[' + json + ']]';
+    return '[' + Tag.ARRAY + ',[' + str + ']]';
   }
 
-  if (ArrayBuffer.isView(value)) {
-    if (value instanceof Int8Array) {
-      tag = Tag.INT8_ARRAY;
-    } else if (value instanceof Uint8Array) {
-      tag = Tag.UINT8_ARRAY;
-    } else if (value instanceof Uint8ClampedArray) {
-      tag = Tag.UINT8_CLAMPED_ARRAY;
-    } else if (value instanceof Int16Array) {
-      tag = Tag.INT16_ARRAY;
-    } else if (value instanceof Uint16Array) {
-      tag = Tag.UINT16_ARRAY;
-    } else if (value instanceof Int32Array) {
-      tag = Tag.INT32_ARRAY;
-    } else if (value instanceof Uint32Array) {
-      tag = Tag.UINT32_ARRAY;
-    } else if (value instanceof Float32Array) {
-      tag = Tag.FLOAT32_ARRAY;
-    } else if (value instanceof Float64Array) {
-      tag = Tag.FLOAT64_ARRAY;
-    } else if (typeof BigInt64Array !== 'undefined' && value instanceof BigInt64Array) {
-      tag = Tag.BIGINT64_ARRAY;
-    } else if (typeof BigUint64Array !== 'undefined' && value instanceof BigUint64Array) {
-      tag = Tag.BIGUINT64_ARRAY;
-    } else {
-      tag = Tag.DATA_VIEW;
-    }
-    return '[' + tag + ',"' + encodeBase64(value.buffer) + '"]';
-  }
-
-  if (value instanceof ArrayBuffer) {
-    return '[' + Tag.ARRAY_BUFFER + ',"' + encodeBase64(value) + '"]';
-  }
-
-  if (value instanceof Date) {
-    return '[' + Tag.DATE + ',' + value.getTime() + ']';
-  }
-
-  if (value instanceof RegExp) {
-    return '[' + Tag.REGEXP + ',' + JSON.stringify(value.source) + ',"' + value.flags + '"]';
-  }
-
-  if (value instanceof Error) {
-    if (typeof DOMException !== 'undefined' && value instanceof DOMException) {
-      return '[' + Tag.DOM_EXCEPTION + ',' + JSON.stringify(value.message) + ',' + JSON.stringify(value.name) + ']';
-    }
-
-    if (value instanceof EvalError) {
-      tag = Tag.EVAL_ERROR;
-    } else if (value instanceof RangeError) {
-      tag = Tag.RANGE_ERROR;
-    } else if (value instanceof ReferenceError) {
-      tag = Tag.REFERENCE_ERROR;
-    } else if (value instanceof SyntaxError) {
-      tag = Tag.SYNTAX_ERROR;
-    } else if (value instanceof TypeError) {
-      tag = Tag.TYPE_ERROR;
-    } else if (value instanceof URIError) {
-      tag = Tag.URI_ERROR;
-    } else {
-      tag = Tag.ERROR;
-    }
-    return '[' + tag + ',' + JSON.stringify(value.message) + ']';
-  }
-
-  if (value instanceof Set) {
-    if (value.size === 0) {
+  if (input instanceof Set) {
+    if (input.size === 0) {
       return '[' + Tag.SET + ']';
     }
 
     if (options.stable) {
-      const itemJsons = [];
+      const valueStrs: string[] = [];
 
-      for (const item of value) {
-        const itemJson = dehydrate(item, refs, options);
-        if (itemJson !== undefined) {
-          itemJsons.push(itemJson);
+      for (value of input) {
+        if ((valueStr = dehydrate(value, refs, options)) === DISCARDED) {
+          continue;
         }
+        valueStrs.push(valueStr);
       }
 
-      separated = itemJsons.length !== 0;
-
-      if (separated) {
-        itemJsons.sort();
-        json = itemJsons.join(',');
+      if ((separated = valueStrs.length !== 0)) {
+        valueStrs.sort();
+        str = valueStrs.join(',');
       }
     } else {
-      for (const item of value) {
-        const itemJson = dehydrate(item, refs, options);
-        if (itemJson === undefined) {
+      for (value of input) {
+        if ((valueStr = dehydrate(value, refs, options)) === DISCARDED) {
           continue;
         }
         if (separated) {
-          json += ',';
+          str += ',';
         }
         separated = true;
-        json += itemJson;
+        str += valueStr;
       }
     }
 
     if (separated) {
-      return '[' + Tag.SET + ',[' + json + ']]';
+      return '[' + Tag.SET + ',[' + str + ']]';
     }
     return '[' + Tag.SET + ']';
   }
 
-  if (value instanceof Map) {
-    if (value.size === 0) {
+  if (input instanceof Map) {
+    if (input.size === 0) {
       return '[' + Tag.MAP + ']';
     }
 
     if (options.stable) {
-      const itemJsons = [];
+      const keyValueStrs: [string, string][] = [];
 
-      for (const key of value.keys()) {
-        const keyJson = dehydrate(key, refs, options);
-        if (keyJson === undefined) {
+      for (key of input.keys()) {
+        if (
+          (keyStr = dehydrate(key, refs, options)) === DISCARDED ||
+          (valueStr = dehydrate(input.get(key), refs, options)) === DISCARDED
+        ) {
           continue;
         }
-
-        const valueJson = dehydrate(value.get(key), refs, options);
-        if (valueJson === undefined) {
-          continue;
-        }
-
-        itemJsons.push('[' + keyJson + ',' + valueJson + ']');
+        keyValueStrs.push([keyStr, valueStr]);
       }
 
-      separated = itemJsons.length !== 0;
+      if (keyValueStrs.length !== 0) {
+        keyValueStrs.sort(compareKeyValueStrs);
 
-      if (separated) {
-        itemJsons.sort();
-        json = itemJsons.join(',');
+        for ([keyStr, valueStr] of keyValueStrs) {
+          if (separated) {
+            str += ',';
+          }
+          separated = true;
+          str += '[' + keyStr + ',' + valueStr + ']';
+        }
       }
     } else {
-      for (const key of value.keys()) {
-        const keyJson = dehydrate(key, refs, options);
-        if (keyJson === undefined) {
+      for (key of input.keys()) {
+        if (
+          (keyStr = dehydrate(key, refs, options)) === DISCARDED ||
+          (valueStr = dehydrate(input.get(key), refs, options)) === DISCARDED
+        ) {
           continue;
         }
-
-        const valueJson = dehydrate(value.get(key), refs, options);
-        if (valueJson === undefined) {
-          continue;
-        }
-
         if (separated) {
-          json += ',';
+          str += ',';
         }
         separated = true;
-        json += '[' + keyJson + ',' + valueJson + ']';
+        str += '[' + keyStr + ',' + valueStr + ']';
       }
     }
 
     if (separated) {
-      return '[' + Tag.MAP + ',[' + json + ']]';
+      return '[' + Tag.MAP + ',[' + str + ']]';
     }
     return '[' + Tag.MAP + ']';
   }
 
-  const keys = Object.keys(value);
+  const keys = Object.keys(input);
 
   if (keys.length === 0) {
     return '{}';
@@ -259,17 +219,23 @@ export function dehydrate(value: any, refs: Map<any, number>, options: Stringify
     keys.sort();
   }
 
-  for (let i = 0; i < keys.length; ++i) {
-    const valueJson = dehydrate(value[keys[i]], refs, options);
-    if (valueJson === undefined) {
+  for (let index = 0; index < keys.length; ++index) {
+    if (
+      ((value = input[keys[index]]) === undefined && !options.undefinedPropertyValuesPreserved) ||
+      (valueStr = dehydrate(value, refs, options)) === DISCARDED
+    ) {
       continue;
     }
     if (separated) {
-      json += ',';
+      str += ',';
     }
     separated = true;
-    json += JSON.stringify(keys[i]) + ':' + valueJson;
+    str += JSON.stringify(keys[index]) + ':' + valueStr;
   }
 
-  return '{' + json + '}';
+  return '{' + str + '}';
+}
+
+function compareKeyValueStrs(left: [string, string], right: [string, string]): number {
+  return left[0] === right[0] ? 0 : left[0] < right[0] ? -1 : 1;
 }

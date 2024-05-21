@@ -1,5 +1,6 @@
-const testJson = require('../../test.json');
-const jsonMarshal = require('json-marshal');
+const testJson = require('./test.json');
+const jsonMarshal = require('../../lib');
+const flatted = require('flatted');
 const fastJsonStableStringify = require('fast-json-stable-stringify');
 
 describe('stringify', () => {
@@ -12,6 +13,12 @@ describe('stringify', () => {
   test('fast-json-stable-stringify', measure => {
     measure(() => {
       fastJsonStableStringify(testJson);
+    });
+  });
+
+  test('flatted', measure => {
+    measure(() => {
+      flatted.stringify(testJson);
     });
   });
 
@@ -36,6 +43,14 @@ describe('parse', () => {
 
     measure(() => {
       JSON.parse(json);
+    });
+  });
+
+  test('flatted', measure => {
+    const json = flatted.stringify(testJson);
+
+    measure(() => {
+      flatted.parse(json);
     });
   });
 

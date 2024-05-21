@@ -1,34 +1,23 @@
-import { dehydrate } from './dehydrate';
+import { dehydrate, DISCARDED } from './dehydrate';
 import { hydrate } from './hydrate';
+import { Tag } from './Tag';
+import type { ParseOptions, StringifyOptions } from './types';
 
-export interface StringifyOptions {
-  /**
-   * If `true` then `undefined` values are encoded during serialization.
-   *
-   * @default false
-   */
-  preserveUndefined?: boolean;
+export { DISCARDED } from './dehydrate';
+export type { StringifyOptions, ParseOptions, SerializationAdapter } from './types';
 
-  /**
-   * If `true` then object keys, `Set` items, and `Map` entries are sorted during serialization.
-   *
-   * @default false
-   */
-  stable?: boolean;
-}
+const serializationOptions: StringifyOptions = {
+  adapters: undefined,
+  stable: false,
+  undefinedPropertyValuesPreserved: false,
+};
 
 export function stringify(value: any, options?: StringifyOptions): string {
-  return dehydrate(value, new Map(), options || stringifyOptions)!;
+  const valueStr = dehydrate(value, new Map(), options || serializationOptions);
+
+  return valueStr !== DISCARDED ? valueStr : '[' + Tag.UNDEFINED + ']';
 }
 
-export function parse(json: string | undefined): any {
-  if (json === null || json === undefined) {
-    return json;
-  }
-  return hydrate(JSON.parse(json), new Map());
+export function parse(str: string, options?: ParseOptions): any {
+  return hydrate(JSON.parse(str), new Map(), options || serializationOptions);
 }
-
-const stringifyOptions: StringifyOptions = {
-  preserveUndefined: false,
-  stable: false,
-};
