@@ -1,4 +1,5 @@
 import type { SerializationAdapter } from '../main';
+import setAdapter from '../main/adapter/set';
 import { hydrate } from '../main/hydrate';
 import { Tag } from '../main/Tag';
 
@@ -120,7 +121,7 @@ describe('hydrate', () => {
     });
 
     test('throws if reference is not found', () => {
-      expect(() => hydrate({ aaa: [Tag.REF, 1] }, new Map(), {})).toThrow(new Error('Illegal reference: 1'));
+      expect(() => hydrate({ aaa: [Tag.REF, 1] }, new Map(), {})).toThrow(new Error("Reference isn't hydrated: 1"));
     });
   });
 
@@ -147,92 +148,46 @@ describe('hydrate', () => {
     });
   });
 
-  describe('Set', () => {
-    test('hydrates zero-size Set', () => {
-      expect(hydrate([Tag.SET], new Map(), {})).toStrictEqual(new Set());
-    });
-
-    test('hydrates Set with items', () => {
-      expect(hydrate([Tag.SET, ['aaa', 'bbb']], new Map(), {})).toStrictEqual(new Set(['aaa', 'bbb']));
-    });
-
-    test('hydrates item references', () => {
-      const aaa = {};
-
-      const xxx = new Set([aaa]);
-      xxx.add(xxx);
-
-      expect(hydrate([Tag.SET, [aaa, [Tag.REF, 1], [Tag.REF, 0]]], new Map(), {})).toStrictEqual(xxx);
-    });
-  });
-
-  describe('Map', () => {
-    test('hydrates zero-size Map', () => {
-      expect(hydrate([Tag.MAP], new Map(), {})).toStrictEqual(new Map());
-    });
-
-    test('hydrates Map with entries', () => {
-      const entries = [
-        ['aaa', 111],
-        ['bbb', 222],
-      ] as const;
-
-      expect(hydrate([Tag.MAP, entries], new Map(), {})).toStrictEqual(new Map(entries));
-    });
-
-    test('hydrates references in entry keys', () => {
-      const xxx = hydrate([Tag.MAP, [[[Tag.REF, 0], 111]]], new Map(), {});
-
-      expect(xxx.size).toBe(1);
-      expect(xxx.get(xxx)).toBe(111);
-    });
-
-    test('hydrates references in entry values', () => {
-      const xxx = hydrate([Tag.MAP, [['aaa', [Tag.REF, 0]]]], new Map(), {});
-
-      expect(xxx.size).toBe(1);
-      expect(xxx.get('aaa')).toBe(xxx);
-    });
-  });
-
   describe('adapters', () => {
     const getTagMock = jest.fn();
     const serializeMock = jest.fn();
-    const deserializeMock = jest.fn();
+    const getValueMock = jest.fn();
 
     const adapterMock: SerializationAdapter = {
       getTag: getTagMock,
-      serialize: serializeMock,
-      deserialize: deserializeMock,
+      getPayload: serializeMock,
+      getValue: getValueMock,
     };
 
     beforeEach(() => {
       getTagMock.mockRestore();
       serializeMock.mockRestore();
-      deserializeMock.mockRestore();
+      getValueMock.mockRestore();
     });
 
     test('hydrates tagged value', () => {
-      deserializeMock.mockReturnValueOnce('bbb');
+      const options = { adapters: [adapterMock] };
 
-      expect(hydrate([222, 'aaa'], new Map(), { adapters: [adapterMock] })).toBe('bbb');
+      getValueMock.mockReturnValueOnce('bbb');
+
+      expect(hydrate([222, 'aaa'], new Map(), options)).toBe('bbb');
       expect(getTagMock).toHaveBeenCalledTimes(0);
       expect(serializeMock).toHaveBeenCalledTimes(0);
-      expect(deserializeMock).toHaveBeenCalledTimes(1);
-      expect(deserializeMock).toHaveBeenNthCalledWith(1, 222, 'aaa');
+      expect(getValueMock).toHaveBeenCalledTimes(1);
+      expect(getValueMock).toHaveBeenNthCalledWith(1, 222, 'aaa', options);
     });
 
     test('deserializer receives a hydrated value', () => {
-      deserializeMock.mockReturnValueOnce('bbb');
+      getValueMock.mockReturnValueOnce('bbb');
 
       const data = { aaa: [222, { bbb: [Tag.REF, 0] }] };
 
       expect(hydrate(data, new Map(), { adapters: [adapterMock] })).toStrictEqual({ aaa: 'bbb' });
       expect(getTagMock).toHaveBeenCalledTimes(0);
       expect(serializeMock).toHaveBeenCalledTimes(0);
-      expect(deserializeMock).toHaveBeenCalledTimes(1);
+      expect(getValueMock).toHaveBeenCalledTimes(1);
 
-      const arg = deserializeMock.mock.calls[0][1];
+      const arg = getValueMock.mock.calls[0][1];
 
       expect(arg.bbb).toBe(data);
     });
@@ -240,8 +195,8 @@ describe('hydrate', () => {
     test('ignores deserializer if it returns undefined', () => {
       const adapterMock2: SerializationAdapter = {
         getTag: () => -111,
-        serialize: () => undefined,
-        deserialize: () => 'xxx',
+        getPayload: () => undefined,
+        getValue: () => 'xxx',
       };
 
       const data = { aaa: [222, 'bbb'] };
@@ -249,7 +204,7 @@ describe('hydrate', () => {
       expect(hydrate(data, new Map(), { adapters: [adapterMock, adapterMock2] })).toStrictEqual({ aaa: 'xxx' });
       expect(getTagMock).toHaveBeenCalledTimes(0);
       expect(serializeMock).toHaveBeenCalledTimes(0);
-      expect(deserializeMock).toHaveBeenCalledTimes(1);
+      expect(getValueMock).toHaveBeenCalledTimes(1);
     });
 
     test('throws if no adapter deserialized the value', () => {

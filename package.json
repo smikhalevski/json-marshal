@@ -11,10 +11,20 @@
       "import": "./index.mjs",
       "require": "./index.js"
     },
-    "./adapter/arrayBuffer": {
-      "types": "./adapter/arrayBuffer.d.ts",
-      "import": "./adapter/arrayBuffer.mjs",
-      "require": "./adapter/arrayBuffer.js"
+    "./dehydrate": {
+      "types": "./adapter/dehydrate.d.ts",
+      "import": "./adapter/dehydrate.mjs",
+      "require": "./adapter/dehydrate.js"
+    },
+    "./hydrate": {
+      "types": "./adapter/hydrate.d.ts",
+      "import": "./adapter/hydrate.mjs",
+      "require": "./adapter/hydrate.js"
+    },
+    "./adapter/array-buffer": {
+      "types": "./adapter/array-buffer.d.ts",
+      "import": "./adapter/array-buffer.mjs",
+      "require": "./adapter/array-buffer.js"
     },
     "./adapter/date": {
       "types": "./adapter/date.d.ts",
@@ -26,10 +36,20 @@
       "import": "./adapter/error.mjs",
       "require": "./adapter/error.js"
     },
+    "./adapter/map": {
+      "types": "./adapter/map.d.ts",
+      "import": "./adapter/map.mjs",
+      "require": "./adapter/map.js"
+    },
     "./adapter/regexp": {
       "types": "./adapter/regexp.d.ts",
       "import": "./adapter/regexp.mjs",
       "require": "./adapter/regexp.js"
+    },
+    "./adapter/set": {
+      "types": "./adapter/set.d.ts",
+      "import": "./adapter/set.mjs",
+      "require": "./adapter/set.js"
     },
     "./package.json": "./package.json"
   },

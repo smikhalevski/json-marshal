@@ -1,154 +1,211 @@
 import { parse, stringify } from '../main';
-import testJson from './test.json';
-import arrayBufferAdapter from '../main/adapter/arrayBuffer';
+import arrayBufferAdapter from '../main/adapter/array-buffer';
+import dateAdapter from '../main/adapter/date';
+import errorAdapter from '../main/adapter/error';
+import mapAdapter from '../main/adapter/map';
+import regexpAdapter from '../main/adapter/regexp';
+import setAdapter from '../main/adapter/set';
+import testValue from './test.json';
 
-describe('stringify', () => {
-  test('circular 1', () => {
-    const aaa: any = {};
-    aaa.bbb = aaa;
-
-    expect(stringify(aaa)).toBe('{"bbb":[0,0]}');
-  });
-
-  test('circular 2', () => {
-    const aaa: any = {};
-    aaa.bbb = {};
-    aaa.bbb.ccc = aaa;
-
-    expect(stringify(aaa)).toBe('{"bbb":{"ccc":[0,0]}}');
-  });
-
-  test('circular Map', () => {
-    const aaa = new Map();
-
-    aaa.set(aaa, aaa);
-
-    expect(stringify(aaa)).toBe('[10,[[[0,0],[0,0]]]]');
-  });
-
-  test('circular Set', () => {
-    const aaa = new Set();
-
-    aaa.add(aaa);
-
-    expect(stringify(aaa)).toBe('[9,[[0,0]]]');
-  });
-
-  test('sibling duplicate', () => {
-    const aaa: any = {};
-    aaa.bbb = {};
-    aaa.ccc = aaa.bbb;
-
-    expect(stringify(aaa)).toBe('{"bbb":{},"ccc":[0,1]}');
-  });
-
-  test('array', () => {
-    expect(stringify([])).toBe('[]');
-    expect(stringify(['aaa'])).toBe('["aaa"]');
-    expect(stringify([111])).toBe('[8,[111]]');
-    expect(stringify([-222])).toBe('[-222]');
-  });
-
-  test('Map', () => {
-    expect(stringify(new Map())).toBe('[10]');
-    expect(stringify(new Map().set(111, 'aaa').set(222, 'bbb'))).toBe('[10,[[111,"aaa"],[222,"bbb"]]]');
-  });
-
-  test('Set', () => {
-    expect(stringify(new Set())).toBe('[9]');
-    expect(stringify(new Set([111, 222]))).toBe('[9,[111,222]]');
-  });
-
-  test('ArrayBuffer', () => {
-    expect(stringify(new ArrayBuffer(5), { adapters: [arrayBufferAdapter()] })).toBe('[23,"AAAAAAA="]');
-  });
-
-  test('BigUint64Array', () => {
-    const aaa = new BigUint64Array([
-      BigInt('111111111111111111111111111111'),
-      BigInt('222222222222222222222222222222'),
-    ]);
-
-    expect(stringify(aaa, { adapters: [arrayBufferAdapter()] })).toBe('[21,"x3EcBxrFfrKO4zgONIr9ZA=="]');
-  });
+test('test.json', () => {
+  expect(parse(stringify(testValue))).toStrictEqual(testValue);
 });
 
-describe('parse', () => {
-  test('test', () => {
-    expect(parse(stringify(testJson))).toEqual(testJson);
-  });
+test('circular object 1', () => {
+  const aaa: any = {};
+  aaa.bbb = aaa;
 
-  test('string', () => {
-    expect(parse(stringify('aaa'))).toBe('aaa');
-  });
+  expect(stringify(aaa)).toBe('{"bbb":[0,0]}');
 
-  test('NaN', () => {
-    expect(parse(stringify(NaN))).toBe(NaN);
-  });
+  const xxx = parse(stringify(aaa));
 
-  test('circular 1', () => {
-    const aaa: any = {};
-    aaa.bbb = aaa;
+  expect(xxx.bbb).toBe(xxx);
+});
 
-    const xxx = parse(stringify(aaa));
+test('circular object 2', () => {
+  const aaa: any = {};
+  aaa.bbb = {};
+  aaa.bbb.ccc = aaa;
 
-    expect(Object.keys(xxx)).toEqual(['bbb']);
-    expect(xxx.bbb).toBe(xxx);
-  });
+  expect(stringify(aaa)).toBe('{"bbb":{"ccc":[0,0]}}');
 
-  test('circular 2', () => {
-    const aaa: any = {};
-    aaa.bbb = {};
-    aaa.bbb.ccc = aaa;
+  const xxx = parse(stringify(aaa));
 
-    const xxx = parse(stringify(aaa));
+  expect(xxx.bbb.ccc).toBe(xxx);
+});
 
-    expect(xxx.bbb.ccc).toBe(xxx);
-  });
+test('sibling object reference', () => {
+  const aaa: any = {};
+  aaa.bbb = {};
+  aaa.ccc = aaa.bbb;
 
-  test('circular Map', () => {
-    const aaa = new Map();
+  expect(stringify(aaa)).toBe('{"bbb":{},"ccc":[0,1]}');
 
-    aaa.set(aaa, aaa);
+  const xxx = parse(stringify(aaa));
 
-    const xxx = parse(stringify(aaa));
+  expect(xxx.ccc).toBe(xxx.bbb);
+});
 
-    expect(xxx.get(xxx)).toBe(xxx);
-  });
+test('circular Set 1', () => {
+  const aaa = new Set();
+  aaa.add(aaa);
 
-  test('circular Set', () => {
-    const aaa = new Set();
+  const options = { adapters: [setAdapter()] };
 
-    aaa.add(aaa);
+  expect(stringify(aaa, options)).toBe('[9,[[0,0]]]');
 
-    const xxx = parse(stringify(aaa));
+  const xxx = parse(stringify(aaa, options), options);
 
-    expect(xxx.size).toBe(1);
-    expect(Array.from(xxx)[0]).toBe(xxx);
-  });
+  expect(xxx).toStrictEqual(new Set([xxx]));
+});
 
-  test('ArrayBuffer', () => {
-    const aaa = new ArrayBuffer(5);
-    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), {
-      adapters: [arrayBufferAdapter()],
-    });
+test('circular Set 2', () => {
+  const aaa = { bbb: new Set() };
+  aaa.bbb.add(aaa);
 
-    expect(xxx).toBeInstanceOf(ArrayBuffer);
-    expect(xxx.byteLength).toBe(aaa.byteLength);
-  });
+  const options = { adapters: [setAdapter()] };
 
-  test('BigUint64Array', () => {
-    const aaa = new BigUint64Array([
-      BigInt('111111111111111111111111111111'),
-      BigInt('222222222222222222222222222222'),
-    ]);
-    const xxx = parse(stringify(aaa, { adapters: [arrayBufferAdapter()] }), {
-      adapters: [arrayBufferAdapter()],
-    });
+  expect(stringify(aaa, options)).toBe('{"bbb":[9,[[0,0]]]}');
 
-    expect(xxx).toBeInstanceOf(BigUint64Array);
-    expect(xxx.length).toBe(2);
-    expect(xxx[0]).toBe(aaa[0]);
-    expect(xxx[1]).toBe(aaa[1]);
-  });
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual({ bbb: new Set([xxx]) });
+});
+
+test('circular Set 3', () => {
+  const aaa = { bbb: new Set() };
+  aaa.bbb.add(aaa.bbb);
+
+  const options = { adapters: [setAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('{"bbb":[9,[[0,1]]]}');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual({ bbb: new Set([xxx.bbb]) });
+});
+
+test('sibling Set', () => {
+  const aaa = { bbb: new Set(), ccc: { ddd: 111 } };
+  aaa.bbb.add(aaa.ccc);
+
+  const options = { adapters: [setAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('{"bbb":[9,[{"ddd":111}]],"ccc":[0,3]}');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual({ bbb: new Set([xxx.ccc]), ccc: { ddd: 111 } });
+});
+
+test('Set payload dehydration', () => {
+  const aaa = new Set();
+  const bbb = { ccc: new Set([aaa]), ddd: aaa };
+  aaa.add(bbb);
+
+  const options = { adapters: [setAdapter()] };
+
+  expect(stringify(bbb, options)).toBe('{"ccc":[9,[[9,[[0,0]]]]],"ddd":[0,3]}');
+
+  const xxx = parse(stringify(bbb, options), options);
+
+  expect(xxx).toStrictEqual({ ccc: new Set([xxx.ddd]), ddd: new Set([xxx]) });
+});
+
+test('Set stable serialization', () => {
+  const aaa = new Set([{ bbb: 111 }, { aaa: 222 }]);
+
+  expect(stringify(aaa, { adapters: [setAdapter()] })).toBe('[9,[{"bbb":111},{"aaa":222}]]');
+
+  expect(stringify(aaa, { adapters: [setAdapter()], stable: true })).toBe('[9,[{"aaa":222},{"bbb":111}]]');
+});
+
+test('Map payload dehydration', () => {
+  const aaa = new Map();
+  const bbb = { bbb: aaa };
+  aaa.set(bbb, { ccc: bbb });
+
+  const options = { adapters: [mapAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('[10,[[{"bbb":[0,0]},{"ccc":[0,3]}]]]');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toBeInstanceOf(Map);
+  expect(Array.from(xxx)).toStrictEqual([[{ bbb: xxx }, { ccc: { bbb: xxx } }]]);
+});
+
+test('Uint8Array dehydration', () => {
+  const aaa = new TextEncoder().encode('aaa bbb ccc').buffer;
+
+  const options = { adapters: [arrayBufferAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('[23,"YWFhIGJiYiBjY2M="]');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual(aaa);
+});
+
+test('BigUint64Array dehydration', () => {
+  const aaa = new BigUint64Array([BigInt(111), BigInt(222)]);
+
+  const options = { adapters: [arrayBufferAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('[21,"bwAAAAAAAADeAAAAAAAAAA=="]');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual(aaa);
+});
+
+test('DOMException dehydration', () => {
+  const aaa = new DOMException('aaa', 'AbortError');
+
+  const options = { adapters: [errorAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('[31,["AbortError","aaa"]]');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toBeInstanceOf(DOMException);
+  expect(xxx.message).toBe('aaa');
+  expect(xxx.name).toBe('AbortError');
+});
+
+test('RegExp dehydration', () => {
+  const aaa = /aaa/g;
+
+  const options = { adapters: [regexpAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('[7,["aaa","g"]]');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual(aaa);
+});
+
+test('Date dehydration', () => {
+  const aaa = new Date(20070101);
+
+  const options = { adapters: [dateAdapter()] };
+
+  expect(stringify(aaa, options)).toBe('[6,20070101]');
+
+  const xxx = parse(stringify(aaa, options), options);
+
+  expect(xxx).toStrictEqual(aaa);
+});
+
+test('Multiple adapters', () => {
+  const aaa = /aaa/g;
+  const bbb = new Date(20070101);
+
+  const options = { adapters: [regexpAdapter(), dateAdapter()] };
+
+  expect(stringify([aaa, bbb], options)).toBe('[[7,["aaa","g"]],[6,20070101]]');
+
+  const xxx = parse(stringify([aaa, bbb], options), options);
+
+  expect(xxx).toStrictEqual([aaa, bbb]);
 });

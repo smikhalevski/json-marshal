@@ -1,16 +1,14 @@
 import { Tag } from './Tag';
-import type { ParseOptions } from './types';
+import type { SerializationOptions } from './types';
 
-export function hydrate(input: any, refs: Map<number, any>, options: ParseOptions): any {
+export function hydrate(input: any, refs: Map<number, any>, options: SerializationOptions): any {
   if (input === null || typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {
     return input;
   }
 
-  const refsSize = refs.size;
-
   // Object
   if (!Array.isArray(input)) {
-    refs.set(refsSize, input);
+    refs.set(refs.size, input);
 
     for (const key in input) {
       const value = input[key];
@@ -25,96 +23,79 @@ export function hydrate(input: any, refs: Map<number, any>, options: ParseOption
 
   // Zero-length array
   if (input.length === 0) {
-    refs.set(refsSize, input);
+    refs.set(refs.size, input);
     return input;
   }
 
   const tag = input[0];
 
-  // Non-encoded array
-  if (typeof tag !== 'number' || (tag | 0) !== tag || tag < 0) {
-    refs.set(refsSize, input);
+  // Regular array
+  if (!Number.isInteger(tag)) {
+    refs.set(refs.size, input);
 
-    for (let index = 0; index < input.length; ++index) {
-      input[index] = hydrate(input[index], refs, options);
+    for (let i = 0; i < input.length; ++i) {
+      input[i] = hydrate(input[i], refs, options);
     }
     return input;
   }
 
-  let value;
-  let values;
-
   switch (tag) {
-    case Tag.REF:
-      value = refs.get(input[1]);
-
-      if (value === undefined) {
-        throw new Error('Illegal reference: ' + input[1]);
-      }
-      return value;
-
     case Tag.UNDEFINED:
       return undefined;
 
     case Tag.NAN:
       return NaN;
 
-    case Tag.POSITIVE_INFINITY:
-      return Infinity;
-
     case Tag.NEGATIVE_INFINITY:
       return -Infinity;
+
+    case Tag.POSITIVE_INFINITY:
+      return +Infinity;
 
     case Tag.BIGINT:
       return BigInt(input[1]);
 
+    // Reference
+    case Tag.REF:
+      const value = refs.get(input[1]);
+
+      if (value === undefined) {
+        throw new ReferenceError("Reference isn't hydrated: " + input[1]);
+      }
+      return value;
+
+    // Encoded array
     case Tag.ARRAY:
       input = input[1];
-      refs.set(refsSize, input);
+      refs.set(refs.size, input);
 
-      for (let index = 0; index < input.length; ++index) {
-        input[index] = hydrate(input[index], refs, options);
-      }
-      return input;
-
-    case Tag.SET:
-      if (input.length === 2) {
-        values = input[1];
-      }
-
-      input = new Set();
-      refs.set(refsSize, input);
-
-      if (values !== undefined) {
-        for (value of values) {
-          input.add(hydrate(value, refs, options));
-        }
-      }
-      return input;
-
-    case Tag.MAP:
-      if (input.length === 2) {
-        values = input[1];
-      }
-
-      input = new Map();
-      refs.set(refsSize, input);
-
-      if (values !== undefined) {
-        for (value of values) {
-          input.set(hydrate(value[0], refs, options), hydrate(value[1], refs, options));
-        }
+      for (let i = 0; i < input.length; ++i) {
+        input[i] = hydrate(input[i], refs, options);
       }
       return input;
   }
 
-  if (options.adapters !== undefined) {
-    value = hydrate(input[1], refs, options);
+  const adapters = options.adapters;
 
-    for (const adapter of options.adapters) {
-      if ((input = adapter.deserialize(tag, value)) !== undefined) {
-        return input;
+  if (adapters !== undefined) {
+    for (let adapter, value, payload, i = 0; i < adapters.length; ++i) {
+      adapter = adapters[i];
+      payload = input[1];
+
+      value = adapter.getValue(tag, payload, options);
+
+      if (value === undefined) {
+        continue;
       }
+
+      refs.set(refs.size, value);
+
+      payload = hydrate(payload, refs, options);
+
+      if (adapter.hydrateValue !== undefined) {
+        adapter.hydrateValue(tag, value, payload, options);
+      }
+      return value;
     }
   }
 

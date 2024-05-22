@@ -1,3 +1,14 @@
+/**
+ * Serializes {@link !DOMException DOMException}, {@link !Error Error}, {@link !EvalError EvalError},
+ * {@link !RangeError RangeError}, {@link !ReferenceError ReferenceError}, {@link !SyntaxError SyntaxError},
+ * {@link !TypeError TypeError}, and {@link !URIError URIError}.
+ *
+ * ```ts
+ * import errorAdapter from 'json-marshal/adapter/error';
+ * ```
+ *
+ * @module adapter/error
+ */
 import { Tag } from '../Tag';
 import type { SerializationAdapter } from '../types';
 
@@ -6,13 +17,13 @@ export default function errorAdapter(): SerializationAdapter {
 }
 
 const adapter: SerializationAdapter = {
-  getTag(value) {
-    if (!(value instanceof Error)) {
-      return -1;
-    }
-
+  getTag(value, _options) {
     if (typeof DOMException !== 'undefined' && value instanceof DOMException) {
       return Tag.DOM_EXCEPTION;
+    }
+
+    if (!(value instanceof Error)) {
+      return undefined;
     }
 
     if (value instanceof EvalError) {
@@ -32,14 +43,14 @@ const adapter: SerializationAdapter = {
     }
   },
 
-  serialize(tag, value) {
+  getPayload(tag, value, _options) {
     return tag === Tag.DOM_EXCEPTION ? [value.name, value.message] : value.message;
   },
 
-  deserialize(tag, data) {
+  getValue(tag, dehydratedPayload, _options) {
     switch (tag) {
       case Tag.DOM_EXCEPTION:
-        return new DOMException(data[1], data[0]);
+        return new DOMException(dehydratedPayload[1], dehydratedPayload[0]);
 
       case Tag.EVAL_ERROR:
       case Tag.RANGE_ERROR:
@@ -48,7 +59,7 @@ const adapter: SerializationAdapter = {
       case Tag.TYPE_ERROR:
       case Tag.URI_ERROR:
       case Tag.ERROR:
-        return new constructors[tag](data[0]);
+        return new constructors[tag](dehydratedPayload[0]);
     }
   },
 };

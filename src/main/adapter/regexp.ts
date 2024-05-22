@@ -1,3 +1,12 @@
+/**
+ * Serializes {@link !RegExp RegExp} instances.
+ *
+ * ```ts
+ * import regexpAdapter from 'json-marshal/adapter/regexp';
+ * ```
+ *
+ * @module adapter/regexp
+ */
 import { Tag } from '../Tag';
 import type { SerializationAdapter } from '../types';
 
@@ -6,15 +15,19 @@ export default function regexpAdapter(): SerializationAdapter {
 }
 
 const adapter: SerializationAdapter = {
-  getTag(value) {
-    return value instanceof RegExp ? Tag.REGEXP : -1;
+  getTag(value, _options) {
+    if (value instanceof RegExp) {
+      return Tag.REGEXP;
+    }
   },
 
-  serialize(tag, value) {
+  getPayload(_tag, value, _options) {
     return [value.source, value.flags];
   },
 
-  deserialize(tag, data) {
-    return tag === Tag.REGEXP ? new RegExp(data[0], data[1]) : undefined;
+  getValue(tag, dehydratedPayload, _options) {
+    if (tag === Tag.REGEXP) {
+      return new RegExp(dehydratedPayload[0], dehydratedPayload[1]);
+    }
   },
 };

@@ -6,7 +6,7 @@ for (let i = 0; i < chars.length; ++i) {
   lookup[chars.charCodeAt(i)] = i;
 }
 
-export function encodeBase64(buffer: ArrayBuffer): string {
+export function manualEncodeBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   const bytesLength = bytes.length;
 
@@ -32,7 +32,7 @@ export function encodeBase64(buffer: ArrayBuffer): string {
   return base64;
 }
 
-export function decodeBase64(base64: string): ArrayBuffer {
+export function manualDecodeBase64(base64: string): ArrayBuffer {
   let bufferLength = base64.length * 0.75;
 
   if (base64[base64.length - 1] === '=') {
@@ -56,4 +56,17 @@ export function decodeBase64(base64: string): ArrayBuffer {
   }
 
   return bytes.buffer;
+}
+
+export function encodeBase64(buffer: ArrayBuffer): string {
+  return typeof Buffer !== 'undefined' ? Buffer.from(buffer).toString('base64') : manualEncodeBase64(buffer);
+}
+
+export function decodeBase64(base64: string): ArrayBuffer {
+  if (typeof Buffer !== 'undefined') {
+    const { buffer, byteOffset, byteLength } = Buffer.from(base64, 'base64');
+
+    return buffer.slice(byteOffset, byteOffset + byteLength);
+  }
+  return manualDecodeBase64(base64);
 }

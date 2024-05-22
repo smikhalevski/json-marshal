@@ -1,3 +1,12 @@
+/**
+ * Serializes {@link !Date Date} instances.
+ *
+ * ```ts
+ * import dateAdapter from 'json-marshal/adapter/date';
+ * ```
+ *
+ * @module adapter/date
+ */
 import { Tag } from '../Tag';
 import type { SerializationAdapter } from '../types';
 
@@ -6,15 +15,19 @@ export default function dateAdapter(): SerializationAdapter {
 }
 
 const adapter: SerializationAdapter = {
-  getTag(value) {
-    return value instanceof Date ? Tag.DATE : -1;
+  getTag(value, _options) {
+    if (value instanceof Date) {
+      return Tag.DATE;
+    }
   },
 
-  serialize(tag, value) {
+  getPayload(_tag, value, _options) {
     return value.getTime();
   },
 
-  deserialize(tag, data) {
-    return tag === Tag.DATE ? new Date(data) : undefined;
+  getValue(tag, dehydratedPayload, _options) {
+    if (tag === Tag.DATE) {
+      return new Date(dehydratedPayload);
+    }
   },
 };

@@ -1,19 +1,30 @@
+/**
+ * Serializes [typed arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects),
+ * {@link !DataView DataView} amd {@link !ArrayBuffer ArrayBuffer} instances as Base64-encoded string.
+ *
+ * ```ts
+ * import arrayBufferAdapter from 'json-marshal/adapter/array-buffer';
+ * ```
+ *
+ * @module adapter/array-buffer
+ */
+
 import { decodeBase64, encodeBase64 } from '../base64';
-import type { SerializationAdapter } from '../types';
 import { Tag } from '../Tag';
+import type { SerializationAdapter } from '../types';
 
 export default function arrayBufferAdapter(): SerializationAdapter {
   return adapter;
 }
 
 const adapter: SerializationAdapter = {
-  getTag(value) {
+  getTag(value, _options) {
     if (value instanceof ArrayBuffer) {
       return Tag.ARRAY_BUFFER;
     }
 
     if (!ArrayBuffer.isView(value)) {
-      return -1;
+      return undefined;
     }
 
     if (value instanceof Int8Array) {
@@ -43,11 +54,11 @@ const adapter: SerializationAdapter = {
     }
   },
 
-  serialize(tag, value) {
+  getPayload(_tag, value, _options) {
     return encodeBase64(value instanceof ArrayBuffer ? value : value.buffer);
   },
 
-  deserialize(tag, data) {
+  getValue(tag, dehydratedPayload, _options) {
     switch (tag) {
       case Tag.INT8_ARRAY:
       case Tag.UINT8_ARRAY:
@@ -61,10 +72,10 @@ const adapter: SerializationAdapter = {
       case Tag.BIGINT64_ARRAY:
       case Tag.BIGUINT64_ARRAY:
       case Tag.DATA_VIEW:
-        return new constructors[tag](decodeBase64(data));
+        return new constructors[tag](decodeBase64(dehydratedPayload));
 
       case Tag.ARRAY_BUFFER:
-        return decodeBase64(data);
+        return decodeBase64(dehydratedPayload);
     }
   },
 };
