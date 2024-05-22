@@ -1,21 +1,25 @@
-# json-marshal
+# JSON Marshal
 
 JSON serializer that can stringify and parse any data structure.
 
+```sh
+npm install --save-prod json-marshal
+```
+
 - Supports circular references.
-- Supports `undefined`, `NaN`, `Infinity`, `BigInt`, `Map` and `Set` out-of-the-box.
-- Doesn't serialize same object twice, no redundancy.
+- Supports `undefined`, `NaN`, `Infinity`, and `BigInt` serialization out-of-the-box.
+- Serialization redundancy is zero: never serializes the same object twice.
 - Supports stable serialization.
 - [Can serialize anything via adapters.](#serialization-adapters)
 - [It is _very_ fast.](#performance)
-- [1.2 kB gzipped.](https://bundlephobia.com/package/json-marshal)
+- [1 kB gzipped.](https://bundlephobia.com/package/json-marshal)
 - Zero dependencies.
 
 ```ts
-import { stringify, parse, StringifyOptions } from 'json-marshal';
+import { stringify, parse, SerializationOptions } from 'json-marshal';
 import regexpAdapter from 'json-marshal/adapter/regexp';
 
-const options: StringifyOptions = {
+const options: SerializationOptions = {
   adapters: [regexpAdapter()]
 };
 
@@ -40,14 +44,14 @@ serialize(hello);
 // ⮕ '{"bill":[0,0]}'
 ```
 
-Out-of-the-box `undefined`, `NaN`, `Infinity`, `BigInt`, `Map` and `Set` can be stringified:
+Out-of-the-box `undefined`, `NaN`, `Infinity`, and `BigInt` can be stringified:
 
 ```ts
 stringify(undefined);
 // ⮕ '[1]'
 
-stringify(new Map().add('hello', 'Bill'));
-// ⮕ '[10,[["hello","Bill"]]]'
+stringify(1_000_000n);
+// ⮕ '[5,"1000000"]'
 ```
 
 By default, object properties with `undefined` values aren't serialized. Override this with
@@ -80,8 +84,7 @@ stringify(gang);
 // ⮕ [{"hello":"bill"},[0,1],[0,1]]
 ```
 
-By default, object property keys, `Map` keys, and `Set` items appear in the serialized string in the same order they
-were added:
+By default, object property keys appear in the serialized string in the same order they were added to the object:
 
 ```ts
 stringify({ kill: 'Bill', hello: 'Greg' });
@@ -97,24 +100,27 @@ stringify({ kill: 'Bill', hello: 'Greg' }, { stable: true });
 
 # Serialization adapters
 
-By default, if a provided object isn't a `Map` or a `Set`, it is serialized as a regular object:
+By default, only enumerable object properties are stringified:
 
 ```ts
+stringify({ hello: 'Bob' });
+// ⮕ '{"hello":"Bob"}'
+
 stringify(new ArrayBuffer(10));
 // ⮕ '{}'
 ```
 
-Provide a serialization adapter that supports the required object type:
+Provide a serialization adapter that supports the required object type to enhance serialization:
 
 ```ts
 import { stringify } from 'json-marshal';
-import arrayBufferAdapter from 'json-marshal/adapter/arrayBuffer';
+import arrayBufferAdapter from 'json-marshal/adapter/array-buffer';
 
 const json = stringify(new ArrayBuffer(10), { adapters: [arrayBufferAdapter()] });
 // ⮕ '[23,"AAAAAAAAAAAAAA=="]'
 ```
 
-When deserializing, the same adapters must be provided, or an error is thrown:
+When deserializing, the same adapters must be provided, or an error would be thrown:
 
 ```ts
 import { parse } from 'json-marshal';
@@ -128,22 +134,28 @@ parse(json, { adapters: [arrayBufferAdapter()] });
 
 ## Built-in adapters
 
-Built-in adapters are imported like this:
+Built-in adapters can be imported as `json-marshal/adapter/*`:
 
 ```ts
-import arrayBufferAdapter from 'json-marshal/adapter/arrayBuffer';
+import arrayBufferAdapter from 'json-marshal/adapter/array-buffer';
 
 stringify(new ArrayBuffer(10), { adapters: [arrayBufferAdapter()] });
 ```
 
 <dl>
-<dt><code>arrayBuffer</code></dt>
+<dt><code>array-buffer</code></dt>
 <dd>
 
 Serializes [typed arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects),
 [`DataView`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView)
 and [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
 instances as Base64-encoded string.
+
+</dd>
+<dt><code>date</code></dt>
+<dd>
+
+Serializes `Date` instances.
 
 </dd>
 <dt><code>error</code></dt>
@@ -159,16 +171,22 @@ Serializes [`DOMException`](https://developer.mozilla.org/en-US/docs/Web/API/DOM
 [`URIError`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/URIError).
 
 </dd>
-<dt><code>date</code></dt>
+<dt><code>map</code></dt>
 <dd>
 
-Serializes `Date` instances.
+Serializes `Map` instances. If `stable` option is provided, `Map` keys are sorted in alphabetical order.
 
 </dd>
 <dt><code>regexp</code></dt>
 <dd>
 
 Serializes `RegExp` instances.
+
+</dd>
+<dt><code>set</code></dt>
+<dd>
+
+Serializes `Set` instances. If `stable` option is provided, `Set` items are sorted in alphabetical order.
 
 </dd>
 </dl>
@@ -184,20 +202,36 @@ const DATE_TAG = 222;
 
 const dateAdapter: SerializationAdapter = {
 
-  getTag: value => value instanceof Date ? DATE_TAG : -1,
+  getTag: (value, options) =>
+    value instanceof Date ? DATE_TAG : undefined,
 
-  serialize: (tag, value) => value.getTime(),
+  getPayload: (tag, value, options) =>
+    value.getTime(),
 
-  deserialize: (tag, data) => tag === DATE_TAG ? new Date(data) : undefined,
+  getValue: (tag, dehydratedPayload, options) =>
+    tag === DATE_TAG ? new Date(dehydratedPayload) : undefined,
 };
 ```
 
-During serialization, each object is passed to the `getTag` method. If it returns a positive integer value then a
-`serialize` method is used to serialize the object. The value returned from the `serialize` method is further
-stringified.
+During serialization, each object is passed to the `getTag` method. If must return the unique tag (a positive integer)
+of the value type, or `undefined` if the adapter doesn't recognize the type of the given value.
 
-During deserialization, `deserialize` method receives serialized data along with its tag and must return a
-deserialized value, or `undefined` if deserialization isn't supported for the given tag.
+Then the `getPayload` method is used to convert the value into a serializable form. The payload returned from the
+`getPayload` method is stringified. During stringification, payloads are dehydrated: circular references and reused
+references are replaced with tags. For example, the tag that references the second object during the depth-first
+traversal looks kile this: `[0,1]`.
+
+During deserialization, `getValue` method receives the dehydrated payload along with its tag and must return a
+deserialized value, or `undefined` if deserialization isn't supported for the given tag. If `getValue` returns a
+non-`undefined` value, a `hydrateValue` method is called. It receives a value created by `getValue` and the hydrated
+payload that can be used to enrich the original value.
+
+For example, if you're deserializing a `Set` instance, then `new Set()` must be returned from the `getValue`, and in
+`hydrateValue` items from the hydrated payload should be added to the set. This approach allows to hydrate cyclic
+references in an arbitrary object. If value hydration isn't required (like in the example with `Date` serialization),
+`hydrateValue` method can be omitted.
+
+Let's use our `dateAdapter`:
 
 ```ts
 import { stringify, parse } from 'json-marshal';
@@ -209,7 +243,7 @@ parse(json, { adapters: [dateAdapter] });
 // ⮕ { today: Date }
 ```
 
-Return `DISCARDED` from the `serialize` method to exclude the provided value from being stringified. For example,
+Return `DISCARDED` from the `getPayload` method to exclude the provided value from being stringified. For example,
 lets write an adapter that
 serializes [runtime-wide symbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for)
 and discards local symbols.
@@ -221,14 +255,15 @@ const SYMBOL_TAG = 333;
 
 const symbolAdapter: SerializationAdapter = {
 
-  getTag: value => typeof value === 'symbol' ? SYMBOL_TAG : -1,
+  getTag: (value, options) =>
+    typeof value === 'symbol' ? SYMBOL_TAG : undefined,
 
   // 🟡 Only runtime-wide symbols are serialized
-  serialize: (tag, value) =>
+  getPayload: (tag, value, options) =>
     Symbol.for(value.description) === value ? value.description : DISCARDED,
 
-  deserialize: (tag, data) =>
-    tag === SYMBOL_TAG ? Symbol.for(data) : undefined,
+  getValue: (tag, dehydratedPayload, options) =>
+    tag === SYMBOL_TAG ? Symbol.for(dehydratedPayload) : undefined,
 };
 ```
 
@@ -245,7 +280,7 @@ stringify([Symbol('goodbye')], { adapters: [symbolAdapter] });
 
 # Performance
 
-The chart below showcases the performance comparison of JSON Marshal and its peers, in terms of millions of operations
+The chart below showcases the performance comparison of JSON Marshal and its peers, in terms of thousands of operations
 per second (greater is better).
 
 <p align="center"><picture>
