@@ -289,7 +289,7 @@ per second (greater is better).
   <img alt="Performance comparison chart" src="./assets/perf-light.svg" />
 </picture></p>
 
-Tests were conducted using [TooFast](https://github.com/smikhalevski/toofast#readme) on Apple M1 with Node.js v20.4.0.
+Tests were conducted using [TooFast](https://github.com/smikhalevski/toofast#readme) on Apple M1 with Node.js v22.2.0.
 
 To reproduce [the performance test suite](./src/test/index.perf.js) results, clone this repo and run:
 

@@ -1,6 +1,7 @@
 const testJson = require('./test.json');
 const jsonMarshal = require('../../lib');
 const flatted = require('flatted');
+const devalue = require('devalue');
 const fastJsonStableStringify = require('fast-json-stable-stringify');
 
 describe('stringify', () => {
@@ -19,6 +20,12 @@ describe('stringify', () => {
   test('flatted', measure => {
     measure(() => {
       flatted.stringify(testJson);
+    });
+  });
+
+  test('devalue', measure => {
+    measure(() => {
+      devalue.stringify(testJson);
     });
   });
 
@@ -51,6 +58,14 @@ describe('parse', () => {
 
     measure(() => {
       flatted.parse(json);
+    });
+  });
+
+  test('devalue', measure => {
+    const json = devalue.stringify(testJson);
+
+    measure(() => {
+      devalue.parse(json);
     });
   });
 
