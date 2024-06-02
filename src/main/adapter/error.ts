@@ -1,10 +1,12 @@
 /**
- * Serializes {@link !DOMException DOMException}, {@link !Error Error}, {@link !EvalError EvalError},
- * {@link !RangeError RangeError}, {@link !ReferenceError ReferenceError}, {@link !SyntaxError SyntaxError},
- * {@link !TypeError TypeError}, and {@link !URIError URIError}.
+ * Serializes {@link !DOMException}, {@link !Error}, {@link !EvalError}, {@link !RangeError}, {@link !ReferenceError},
+ * {@link !SyntaxError}, {@link !TypeError}, and {@link !URIError}.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import errorAdapter from 'json-marshal/adapter/error';
+ *
+ * stringify(new Error(), { adapters: [errorAdapter()] });
  * ```
  *
  * @module adapter/error

@@ -1,8 +1,11 @@
 /**
- * Serializes {@link !RegExp RegExp} instances.
+ * Serializes {@link !RegExp} instances.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import regexpAdapter from 'json-marshal/adapter/regexp';
+ *
+ * stringify(/Old/g, { adapters: [regexpAdapter()] });
  * ```
  *
  * @module adapter/regexp

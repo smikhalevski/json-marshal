@@ -1,8 +1,11 @@
 /**
- * Serializes {@link !Map Map} instances.
+ * Serializes {@link !Map} instances.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import mapAdapter from 'json-marshal/adapter/map';
+ *
+ * stringify(new Map(), { adapters: [mapAdapter()] });
  * ```
  *
  * @module adapter/map

@@ -1,8 +1,11 @@
 /**
- * Serializes {@link !Set Set} instances.
+ * Serializes {@link !Set} instances.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import setAdapter from 'json-marshal/adapter/set';
+ *
+ * stringify(new Set(), { adapters: [setAdapter()] });
  * ```
  *
  * @module adapter/set

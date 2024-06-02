@@ -1,9 +1,12 @@
 /**
  * Serializes [typed arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects),
- * {@link !DataView DataView} amd {@link !ArrayBuffer ArrayBuffer} instances as Base64-encoded string.
+ * {@link !DataView} amd {@link !ArrayBuffer} instances as Base64-encoded string.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import arrayBufferAdapter from 'json-marshal/adapter/array-buffer';
+ *
+ * stringify(new ArrayBuffer(10), { adapters: [arrayBufferAdapter()] });
  * ```
  *
  * @module adapter/array-buffer
