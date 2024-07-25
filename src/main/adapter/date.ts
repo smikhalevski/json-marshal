@@ -11,7 +11,7 @@
  * @module adapter/date
  */
 import { Tag } from '../Tag';
-import type { SerializationAdapter } from '../types';
+import { SerializationAdapter } from '../types';
 
 export default function dateAdapter(): SerializationAdapter {
   return adapter;

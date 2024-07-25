@@ -1,5 +1,5 @@
 import { Tag } from './Tag';
-import type { SerializationOptions } from './types';
+import { SerializationOptions } from './types';
 
 /**
  * Prevents payload from being serialized if returned from the {@link SerializationAdapter.getPayload}.

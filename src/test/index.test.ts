@@ -1,4 +1,4 @@
-import { parse, stringify } from '../main';
+import JSONMarshal, { parse, stringify } from '../main';
 import arrayBufferAdapter from '../main/adapter/array-buffer';
 import dateAdapter from '../main/adapter/date';
 import errorAdapter from '../main/adapter/error';
@@ -197,7 +197,7 @@ test('Date dehydration', () => {
   expect(xxx).toStrictEqual(aaa);
 });
 
-test('Multiple adapters', () => {
+test('multiple adapters', () => {
   const aaa = /aaa/g;
   const bbb = new Date(20070101);
 
@@ -208,4 +208,21 @@ test('Multiple adapters', () => {
   const xxx = parse(stringify([aaa, bbb], options), options);
 
   expect(xxx).toStrictEqual([aaa, bbb]);
+});
+
+test('default export', () => {
+  expect(JSONMarshal.stringify(new Error('aaa'))).toBe('[24,"aaa"]');
+
+  const error1 = new Error('aaa');
+  error1.name = 'Bbb';
+
+  expect(JSONMarshal.stringify(error1)).toBe('[24,["Bbb","aaa"]]');
+
+  const error2 = JSONMarshal.parse(JSONMarshal.stringify(error1));
+
+  expect(error2).toBeInstanceOf(Error);
+  expect(error2.name).toBe('Bbb');
+
+  expect(JSONMarshal.stringify(Symbol())).toBe('[1]');
+  expect(JSONMarshal.stringify({ aaa: Symbol() })).toBe('{}');
 });

@@ -1,5 +1,5 @@
 import { Tag } from './Tag';
-import type { SerializationOptions } from './types';
+import { SerializationOptions } from './types';
 
 export function hydrate(input: any, refs: Map<number, any>, options: SerializationOptions): any {
   if (input === null || typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {

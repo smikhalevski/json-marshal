@@ -10,9 +10,10 @@
  *
  * @module adapter/set
  */
+import { compareKeys } from '../utils';
 import { dehydrate, DISCARDED } from '../dehydrate';
 import { Tag } from '../Tag';
-import type { SerializationAdapter } from '../types';
+import { SerializationAdapter } from '../types';
 
 export default function setAdapter(): SerializationAdapter {
   return adapter;
@@ -74,7 +75,3 @@ const adapter: SerializationAdapter = {
     }
   },
 };
-
-function compareKeys([a]: any[], [b]: any[]): number {
-  return a === b ? 0 : a < b ? -1 : 1;
-}

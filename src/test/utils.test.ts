@@ -1,4 +1,4 @@
-import { manualDecodeBase64, manualEncodeBase64 } from '../main/base64';
+import { manualDecodeBase64, manualEncodeBase64 } from '../main/utils';
 
 export function createRangeBuffer(): ArrayBuffer {
   const bytes = new Uint8Array(256);

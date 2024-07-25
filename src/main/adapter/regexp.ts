@@ -11,7 +11,7 @@
  * @module adapter/regexp
  */
 import { Tag } from '../Tag';
-import type { SerializationAdapter } from '../types';
+import { SerializationAdapter } from '../types';
 
 export default function regexpAdapter(): SerializationAdapter {
   return adapter;
