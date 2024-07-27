@@ -1,5 +1,4 @@
-import type { SerializationAdapter } from '../main';
-import setAdapter from '../main/adapter/set';
+import { SerializationAdapter } from '../main';
 import { hydrate } from '../main/hydrate';
 import { Tag } from '../main/Tag';
 

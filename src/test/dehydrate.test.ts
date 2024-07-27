@@ -1,4 +1,4 @@
-import type { SerializationAdapter } from '../main';
+import { SerializationAdapter } from '../main';
 import mapAdapter from '../main/adapter/map';
 import setAdapter from '../main/adapter/set';
 import { dehydrate, DISCARDED } from '../main/dehydrate';

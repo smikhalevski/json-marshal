@@ -1,17 +1,20 @@
 /**
  * Serializes [typed arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects),
- * {@link !DataView DataView} amd {@link !ArrayBuffer ArrayBuffer} instances as Base64-encoded string.
+ * {@link !DataView} and {@link !ArrayBuffer} instances as Base64-encoded string.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import arrayBufferAdapter from 'json-marshal/adapter/array-buffer';
+ *
+ * stringify(new ArrayBuffer(10), { adapters: [arrayBufferAdapter()] });
  * ```
  *
  * @module adapter/array-buffer
  */
 
-import { decodeBase64, encodeBase64 } from '../base64';
+import { decodeBase64, encodeBase64 } from '../utils';
 import { Tag } from '../Tag';
-import type { SerializationAdapter } from '../types';
+import { SerializationAdapter } from '../types';
 
 export default function arrayBufferAdapter(): SerializationAdapter {
   return adapter;
@@ -19,43 +22,50 @@ export default function arrayBufferAdapter(): SerializationAdapter {
 
 const adapter: SerializationAdapter = {
   getTag(value, _options) {
-    if (value instanceof ArrayBuffer) {
+    if (value instanceof ArrayBufferConstructor) {
       return Tag.ARRAY_BUFFER;
     }
-
-    if (!ArrayBuffer.isView(value)) {
+    if (!ArrayBufferConstructor.isView(value)) {
       return undefined;
     }
-
-    if (value instanceof Int8Array) {
+    if (value instanceof Int8ArrayConstructor) {
       return Tag.INT8_ARRAY;
-    } else if (value instanceof Uint8Array) {
-      return Tag.UINT8_ARRAY;
-    } else if (value instanceof Uint8ClampedArray) {
-      return Tag.UINT8_CLAMPED_ARRAY;
-    } else if (value instanceof Int16Array) {
-      return Tag.INT16_ARRAY;
-    } else if (value instanceof Uint16Array) {
-      return Tag.UINT16_ARRAY;
-    } else if (value instanceof Int32Array) {
-      return Tag.INT32_ARRAY;
-    } else if (value instanceof Uint32Array) {
-      return Tag.UINT32_ARRAY;
-    } else if (value instanceof Float32Array) {
-      return Tag.FLOAT32_ARRAY;
-    } else if (value instanceof Float64Array) {
-      return Tag.FLOAT64_ARRAY;
-    } else if (typeof BigInt64Array !== 'undefined' && value instanceof BigInt64Array) {
-      return Tag.BIGINT64_ARRAY;
-    } else if (typeof BigUint64Array !== 'undefined' && value instanceof BigUint64Array) {
-      return Tag.BIGUINT64_ARRAY;
-    } else {
-      return Tag.DATA_VIEW;
     }
+    if (value instanceof Uint8ArrayConstructor) {
+      return Tag.UINT8_ARRAY;
+    }
+    if (value instanceof Uint8ClampedArrayConstructor) {
+      return Tag.UINT8_CLAMPED_ARRAY;
+    }
+    if (value instanceof Int16ArrayConstructor) {
+      return Tag.INT16_ARRAY;
+    }
+    if (value instanceof Uint16ArrayConstructor) {
+      return Tag.UINT16_ARRAY;
+    }
+    if (value instanceof Int32ArrayConstructor) {
+      return Tag.INT32_ARRAY;
+    }
+    if (value instanceof Uint32ArrayConstructor) {
+      return Tag.UINT32_ARRAY;
+    }
+    if (value instanceof Float32ArrayConstructor) {
+      return Tag.FLOAT32_ARRAY;
+    }
+    if (value instanceof Float64ArrayConstructor) {
+      return Tag.FLOAT64_ARRAY;
+    }
+    if (BigInt64ArrayConstructor !== undefined && value instanceof BigInt64ArrayConstructor) {
+      return Tag.BIGINT64_ARRAY;
+    }
+    if (BigUint64ArrayConstructor !== undefined && value instanceof BigUint64ArrayConstructor) {
+      return Tag.BIGUINT64_ARRAY;
+    }
+    return Tag.DATA_VIEW;
   },
 
   getPayload(_tag, value, _options) {
-    return encodeBase64(value instanceof ArrayBuffer ? value : value.buffer);
+    return encodeBase64(value instanceof ArrayBufferConstructor ? value : value.buffer);
   },
 
   getValue(tag, dehydratedPayload, _options) {
@@ -80,17 +90,31 @@ const adapter: SerializationAdapter = {
   },
 };
 
+const ArrayBufferConstructor = ArrayBuffer;
+const Int8ArrayConstructor = Int8Array;
+const Uint8ArrayConstructor = Uint8Array;
+const Uint8ClampedArrayConstructor = Uint8ClampedArray;
+const Int16ArrayConstructor = Int16Array;
+const Uint16ArrayConstructor = Uint16Array;
+const Int32ArrayConstructor = Int32Array;
+const Uint32ArrayConstructor = Uint32Array;
+const Float32ArrayConstructor = Float32Array;
+const Float64ArrayConstructor = Float64Array;
+const BigInt64ArrayConstructor = typeof BigInt64Array !== 'undefined' ? BigInt64Array : undefined;
+const BigUint64ArrayConstructor = typeof BigUint64Array !== 'undefined' ? BigUint64Array : undefined;
+const DataViewConstructor = DataView;
+
 const constructors = {
-  [Tag.INT8_ARRAY]: Int8Array,
-  [Tag.UINT8_ARRAY]: Uint8Array,
-  [Tag.UINT8_CLAMPED_ARRAY]: Uint8ClampedArray,
-  [Tag.INT16_ARRAY]: Int16Array,
-  [Tag.UINT16_ARRAY]: Uint16Array,
-  [Tag.INT32_ARRAY]: Int32Array,
-  [Tag.UINT32_ARRAY]: Uint32Array,
-  [Tag.FLOAT32_ARRAY]: Float32Array,
-  [Tag.FLOAT64_ARRAY]: Float64Array,
-  [Tag.BIGINT64_ARRAY]: typeof BigInt64Array !== 'undefined' ? BigInt64Array : DataView,
-  [Tag.BIGUINT64_ARRAY]: typeof BigUint64Array !== 'undefined' ? BigUint64Array : DataView,
-  [Tag.DATA_VIEW]: DataView,
+  [Tag.INT8_ARRAY]: Int8ArrayConstructor,
+  [Tag.UINT8_ARRAY]: Uint8ArrayConstructor,
+  [Tag.UINT8_CLAMPED_ARRAY]: Uint8ClampedArrayConstructor,
+  [Tag.INT16_ARRAY]: Int16ArrayConstructor,
+  [Tag.UINT16_ARRAY]: Uint16ArrayConstructor,
+  [Tag.INT32_ARRAY]: Int32ArrayConstructor,
+  [Tag.UINT32_ARRAY]: Uint32ArrayConstructor,
+  [Tag.FLOAT32_ARRAY]: Float32ArrayConstructor,
+  [Tag.FLOAT64_ARRAY]: Float64ArrayConstructor,
+  [Tag.BIGINT64_ARRAY]: BigInt64ArrayConstructor || DataViewConstructor,
+  [Tag.BIGUINT64_ARRAY]: BigUint64ArrayConstructor || DataViewConstructor,
+  [Tag.DATA_VIEW]: DataViewConstructor,
 };

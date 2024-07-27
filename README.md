@@ -1,19 +1,53 @@
 # JSON Marshal
 
-JSON serializer that can stringify and parse any data structure.
+JSON serializer that can stringify and parse any data type.
 
 ```sh
 npm install --save-prod json-marshal
 ```
 
 - Supports circular references.
-- Supports `undefined`, `NaN`, `Infinity`, and `BigInt` serialization out-of-the-box.
 - Serialization redundancy is zero: never serializes the same object twice.
 - Supports stable serialization.
 - [Can serialize anything via adapters.](#serialization-adapters)
+- Supports many data types out-of-the-box:
+  - `undefined` `NaN` `Infinity` `BigInt` `Date` `RegExp` `Map` and `Set`.
+  - [Typed arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects),
+    [`DataView`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView) and
+    [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer).
+  - [Errors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error), including
+    [`DOMException`](https://developer.mozilla.org/en-US/docs/Web/API/DOMException).
+  - `Symbol` values are discarded by default, but you can add support with
+    a [custom adapter](#authoring-a-serialization-adapter).
 - [It is _very_ fast.](#performance)
 - [1 kB gzipped.](https://bundlephobia.com/package/json-marshal)
 - Zero dependencies.
+
+```ts
+import JSONMarshal from 'json-marshal';
+
+const json = JSONMarshal.stringify({ hello: /Old/g });
+// ⮕ '{"hello":[7,"Old","g"]}'
+
+JSONMarshal.parse(json)
+// ⮕ { hello: /Old/g }
+```
+
+# Overview
+
+The default export provides a serializer that can be used as a drop-in replacement for
+[`JSON`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON):
+
+```ts
+import JSONMarshal from 'json-marshal';
+
+JSONMarshal.stringify('Hello');
+// ⮕ '"Hello"'
+```
+
+Import [`parse`](https://smikhalevski.github.io/json-marshal/functions/json_marshal.parse.html) and
+[`stringify`](https://smikhalevski.github.io/json-marshal/functions/json_marshal.stringify.html) function separately to
+have a fine-grained control over serialization:
 
 ```ts
 import { stringify, parse, SerializationOptions } from 'json-marshal';
@@ -30,9 +64,18 @@ parse(json, options);
 // ⮕ { hello: /Old/g }
 ```
 
-# Overview
+Or create a custom serializer:
 
-Circular references:
+```ts
+import { createSerializer } from 'json-marshal';
+
+const serializer = createSerializer({ adapters: [regexpAdapter()] });
+
+serializer.stringify(/Old/g);
+// ⮕ '[7,"Old","g"]'
+```
+
+JSON Marshal supports circular references:
 
 ```ts
 const gunslinger = {};
@@ -289,7 +332,7 @@ per second (greater is better).
   <img alt="Performance comparison chart" src="./assets/perf-light.svg" />
 </picture></p>
 
-Tests were conducted using [TooFast](https://github.com/smikhalevski/toofast#readme) on Apple M1 with Node.js v20.4.0.
+Tests were conducted using [TooFast](https://github.com/smikhalevski/toofast#readme) on Apple M1 with Node.js v22.2.0.
 
 To reproduce [the performance test suite](./src/test/index.perf.js) results, clone this repo and run:
 

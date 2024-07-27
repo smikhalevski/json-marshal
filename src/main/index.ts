@@ -2,16 +2,22 @@
  * The module with the core JSON Marshal functionality.
  *
  * ```ts
- * import { stringify, parse } from 'json-marshal';
+ * import JSONMarshal from 'json-marshal';
  * ```
  *
  * @module json-marshal
  */
 
+import arrayBufferAdapter from './adapter/array-buffer';
+import dateAdapter from './adapter/date';
+import errorAdapter from './adapter/error';
+import mapAdapter from './adapter/map';
+import regexpAdapter from './adapter/regexp';
+import setAdapter from './adapter/set';
 import { dehydrate, DISCARDED } from './dehydrate';
 import { hydrate } from './hydrate';
 import { Tag } from './Tag';
-import type { SerializationOptions } from './types';
+import { SerializationOptions } from './types';
 
 export { DISCARDED } from './dehydrate';
 export type { SerializationOptions, SerializationAdapter } from './types';
@@ -37,3 +43,26 @@ export function stringify(value: any, options?: SerializationOptions): string {
 export function parse(str: string, options?: SerializationOptions): any {
   return hydrate(JSON.parse(str), new Map(), options || {});
 }
+
+/**
+ * Creates a {@link parse}-{@link stringify} pair that shares the same serialization options.
+ *
+ * @param options Serialization options.
+ */
+export function createSerializer(options: SerializationOptions = {}) {
+  return {
+    parse(str: string): any {
+      return parse(str, options);
+    },
+    stringify(value: any): string {
+      return stringify(value, options);
+    },
+  };
+}
+
+/**
+ * The default non-stable serializer that uses all built-in adapters.
+ */
+export default createSerializer({
+  adapters: [arrayBufferAdapter(), dateAdapter(), errorAdapter(), mapAdapter(), regexpAdapter(), setAdapter()],
+});

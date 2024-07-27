@@ -1,15 +1,19 @@
 /**
- * Serializes {@link !Map Map} instances.
+ * Serializes {@link !Map} instances.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import mapAdapter from 'json-marshal/adapter/map';
+ *
+ * stringify(new Map(), { adapters: [mapAdapter()] });
  * ```
  *
  * @module adapter/map
  */
+import { compareKeys } from '../utils';
 import { dehydrate, DISCARDED } from '../dehydrate';
 import { Tag } from '../Tag';
-import type { SerializationAdapter } from '../types';
+import { SerializationAdapter } from '../types';
 
 export default function mapAdapter(): SerializationAdapter {
   return adapter;
@@ -73,7 +77,3 @@ const adapter: SerializationAdapter = {
     }
   },
 };
-
-function compareKeys([a]: any[], [b]: any[]): number {
-  return a === b ? 0 : a < b ? -1 : 1;
-}

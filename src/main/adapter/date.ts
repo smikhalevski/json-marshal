@@ -1,14 +1,17 @@
 /**
- * Serializes {@link !Date Date} instances.
+ * Serializes {@link !Date} instances.
  *
  * ```ts
+ * import { stringify } from 'json-marshal';
  * import dateAdapter from 'json-marshal/adapter/date';
+ *
+ * stringify(new Date(), { adapters: [dateAdapter()] });
  * ```
  *
  * @module adapter/date
  */
 import { Tag } from '../Tag';
-import type { SerializationAdapter } from '../types';
+import { SerializationAdapter } from '../types';
 
 export default function dateAdapter(): SerializationAdapter {
   return adapter;

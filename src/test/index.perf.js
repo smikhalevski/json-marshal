@@ -1,6 +1,7 @@
 const testJson = require('./test.json');
 const jsonMarshal = require('../../lib');
 const flatted = require('flatted');
+const devalue = require('devalue');
 const fastJsonStableStringify = require('fast-json-stable-stringify');
 
 describe('stringify', () => {
@@ -22,7 +23,21 @@ describe('stringify', () => {
     });
   });
 
-  test('json-marshal / stable', measure => {
+  test('devalue', measure => {
+    measure(() => {
+      devalue.stringify(testJson);
+    });
+  });
+
+  test('json-marshal', measure => {
+    const options = { stable: true };
+
+    measure(() => {
+      jsonMarshal.default.stringify(testJson, options);
+    });
+  });
+
+  test('json-marshal / no adapters, stable', measure => {
     const options = { stable: true };
 
     measure(() => {
@@ -30,7 +45,7 @@ describe('stringify', () => {
     });
   });
 
-  test('json-marshal / unstable', measure => {
+  test('json-marshal / no adapters, unstable', measure => {
     measure(() => {
       jsonMarshal.stringify(testJson);
     });
@@ -54,7 +69,23 @@ describe('parse', () => {
     });
   });
 
+  test('devalue', measure => {
+    const json = devalue.stringify(testJson);
+
+    measure(() => {
+      devalue.parse(json);
+    });
+  });
+
   test('json-marshal', measure => {
+    const json = jsonMarshal.stringify(testJson);
+
+    measure(() => {
+      jsonMarshal.parse(json);
+    });
+  });
+
+  test('json-marshal / no adapters', measure => {
     const json = jsonMarshal.stringify(testJson);
 
     measure(() => {

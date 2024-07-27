@@ -1,9 +1,9 @@
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 const lookup = new Uint8Array(128);
 
-for (let i = 0; i < chars.length; ++i) {
-  lookup[chars.charCodeAt(i)] = i;
+for (let i = 0; i < BASE64_CHARS.length; ++i) {
+  lookup[BASE64_CHARS.charCodeAt(i)] = i;
 }
 
 export function manualEncodeBase64(buffer: ArrayBuffer): string {
@@ -17,10 +17,10 @@ export function manualEncodeBase64(buffer: ArrayBuffer): string {
     b = bytes[i++];
     c = bytes[i++];
 
-    base64 += chars[a >> 2];
-    base64 += chars[((a & 3) << 4) | (b >> 4)];
-    base64 += chars[((b & 15) << 2) | (c >> 6)];
-    base64 += chars[c & 63];
+    base64 += BASE64_CHARS[a >> 2];
+    base64 += BASE64_CHARS[((a & 3) << 4) | (b >> 4)];
+    base64 += BASE64_CHARS[((b & 15) << 2) | (c >> 6)];
+    base64 += BASE64_CHARS[c & 63];
   }
 
   if (bytesLength % 3 === 2) {
@@ -58,15 +58,20 @@ export function manualDecodeBase64(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-export function encodeBase64(buffer: ArrayBuffer): string {
-  return typeof Buffer !== 'undefined' ? Buffer.from(buffer).toString('base64') : manualEncodeBase64(buffer);
+function bufferEncodeBase64(buffer: ArrayBuffer): string {
+  return Buffer.from(buffer).toString('base64');
 }
 
-export function decodeBase64(base64: string): ArrayBuffer {
-  if (typeof Buffer !== 'undefined') {
-    const { buffer, byteOffset, byteLength } = Buffer.from(base64, 'base64');
+function bufferDecodeBase64(base64: string): ArrayBuffer {
+  const { buffer, byteOffset, byteLength } = Buffer.from(base64, 'base64');
 
-    return buffer.slice(byteOffset, byteOffset + byteLength);
-  }
-  return manualDecodeBase64(base64);
+  return buffer.slice(byteOffset, byteOffset + byteLength);
+}
+
+export const encodeBase64 = typeof Buffer !== 'undefined' ? bufferEncodeBase64 : manualEncodeBase64;
+
+export const decodeBase64 = typeof Buffer !== 'undefined' ? bufferDecodeBase64 : manualDecodeBase64;
+
+export function compareKeys([a]: any[], [b]: any[]): number {
+  return a === b ? 0 : a < b ? -1 : 1;
 }
