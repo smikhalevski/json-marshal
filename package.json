@@ -1,6 +1,6 @@
 {
   "name": "json-marshal",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "JSON serializer that can stringify and parse any data type.",
   "main": "./index.js",
   "module": "./index.mjs",
