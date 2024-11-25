@@ -20,28 +20,28 @@ export default function errorAdapter(): SerializationAdapter {
 
 const adapter: SerializationAdapter = {
   getTag(value, _options) {
-    if (DOMExceptionConstructor !== undefined && value instanceof DOMExceptionConstructor) {
+    if (typeof DOMException !== 'undefined' && value instanceof DOMException) {
       return Tag.DOM_EXCEPTION;
     }
-    if (!(value instanceof ErrorConstructor)) {
+    if (!(value instanceof Error)) {
       return undefined;
     }
-    if (value instanceof EvalErrorConstructor) {
+    if (value instanceof EvalError) {
       return Tag.EVAL_ERROR;
     }
-    if (value instanceof RangeErrorConstructor) {
+    if (value instanceof RangeError) {
       return Tag.RANGE_ERROR;
     }
-    if (value instanceof ReferenceErrorConstructor) {
+    if (value instanceof ReferenceError) {
       return Tag.REFERENCE_ERROR;
     }
-    if (value instanceof SyntaxErrorConstructor) {
+    if (value instanceof SyntaxError) {
       return Tag.SYNTAX_ERROR;
     }
-    if (value instanceof TypeErrorConstructor) {
+    if (value instanceof TypeError) {
       return Tag.TYPE_ERROR;
     }
-    if (value instanceof URIErrorConstructor) {
+    if (value instanceof URIError) {
       return Tag.URI_ERROR;
     }
     return Tag.ERROR;
@@ -68,37 +68,28 @@ const adapter: SerializationAdapter = {
         return new constructors[tag](dehydratedPayload);
 
       case Tag.DOM_EXCEPTION:
-        if (DOMExceptionConstructor !== undefined) {
-          return new DOMExceptionConstructor(dehydratedPayload[1], dehydratedPayload[0]);
+        if (typeof DOMException !== 'undefined') {
+          return new DOMException(dehydratedPayload[1], dehydratedPayload[0]);
         }
       // fallthrough
 
       case Tag.ERROR:
         if (typeof dehydratedPayload === 'string') {
-          return new ErrorConstructor(dehydratedPayload);
+          return new Error(dehydratedPayload);
         }
 
-        const error = new ErrorConstructor(dehydratedPayload[1]);
+        const error = new Error(dehydratedPayload[1]);
         error.name = dehydratedPayload[0];
         return error;
     }
   },
 };
 
-const DOMExceptionConstructor = typeof DOMException !== 'undefined' ? DOMException : undefined;
-const EvalErrorConstructor = EvalError;
-const RangeErrorConstructor = RangeError;
-const ReferenceErrorConstructor = ReferenceError;
-const SyntaxErrorConstructor = SyntaxError;
-const TypeErrorConstructor = TypeError;
-const URIErrorConstructor = URIError;
-const ErrorConstructor = Error;
-
 const constructors = {
-  [Tag.EVAL_ERROR]: EvalErrorConstructor,
-  [Tag.RANGE_ERROR]: RangeErrorConstructor,
-  [Tag.REFERENCE_ERROR]: ReferenceErrorConstructor,
-  [Tag.SYNTAX_ERROR]: SyntaxErrorConstructor,
-  [Tag.TYPE_ERROR]: TypeErrorConstructor,
-  [Tag.URI_ERROR]: URIErrorConstructor,
+  [Tag.EVAL_ERROR]: EvalError,
+  [Tag.RANGE_ERROR]: RangeError,
+  [Tag.REFERENCE_ERROR]: ReferenceError,
+  [Tag.SYNTAX_ERROR]: SyntaxError,
+  [Tag.TYPE_ERROR]: TypeError,
+  [Tag.URI_ERROR]: URIError,
 };

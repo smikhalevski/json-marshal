@@ -1,9 +1,5 @@
 {
   "preset": "ts-jest",
-  "testMatch": [
-    "<rootDir>/**/*.test.{tsx,ts}"
-  ],
-  "modulePathIgnorePatterns": [
-    "<rootDir>/lib"
-  ]
+  "testMatch": ["<rootDir>/**/*.test.{tsx,ts}"],
+  "modulePathIgnorePatterns": ["<rootDir>/lib"]
 }

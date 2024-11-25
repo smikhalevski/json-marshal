@@ -11,8 +11,8 @@ module.exports = {
     './src/main/adapter/set.ts',
   ],
   output: [
-    { format: 'cjs', entryFileNames: '[name].js', dir: './lib', preserveModules: true },
-    { format: 'es', entryFileNames: '[name].mjs', dir: './lib', preserveModules: true },
+    { format: 'cjs', entryFileNames: '[name].js', dir: './lib', preserveModules: true, exports: 'named' },
+    { format: 'es', entryFileNames: '[name].mjs', dir: './lib', preserveModules: true, exports: 'named' },
   ],
   plugins: [typescript({ tsconfig: './tsconfig.build.json' })],
 };

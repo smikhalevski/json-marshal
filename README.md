@@ -256,7 +256,7 @@ const dateAdapter: SerializationAdapter = {
 };
 ```
 
-During serialization, each object is passed to the `getTag` method. If must return the unique tag (a positive integer)
+During serialization, each object is passed to the `getTag` method. It must return the unique tag (a positive integer)
 of the value type, or `undefined` if the adapter doesn't recognize the type of the given value.
 
 Then the `getPayload` method is used to convert the value into a serializable form. The payload returned from the

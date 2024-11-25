@@ -17,11 +17,6 @@
   "readme": "none",
   "tsconfig": "./tsconfig.json",
   "customCss": "./node_modules/typedoc-custom-css/custom.css",
-  "entryPoints": [
-    "./src/main/index.ts",
-    "./src/main/adapter/*.ts"
-  ],
-  "plugin": [
-    "typedoc-plugin-mdn-links"
-  ]
+  "entryPoints": ["./src/main/index.ts", "./src/main/adapter/*.ts"],
+  "plugin": ["typedoc-plugin-mdn-links"]
 }

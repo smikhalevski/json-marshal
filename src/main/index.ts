@@ -63,6 +63,8 @@ export function createSerializer(options: SerializationOptions = {}) {
 /**
  * The default non-stable serializer that uses all built-in adapters.
  */
-export default createSerializer({
+const JSONMarshal = createSerializer({
   adapters: [arrayBufferAdapter(), dateAdapter(), errorAdapter(), mapAdapter(), regexpAdapter(), setAdapter()],
 });
+
+export default JSONMarshal;
