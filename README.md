@@ -1,6 +1,12 @@
-# JSON Marshal
+<p align="center">
+  <a href="#readme"><picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="./assets/logo-light.png" />
+    <img alt="JSON Marshal" src="./assets/logo-light.png" width="250" />
+  </picture></a>
+</p>
 
-JSON serializer that can stringify and parse any data type.
+<br>
 
 ```sh
 npm install --save-prod json-marshal
