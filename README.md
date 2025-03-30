@@ -259,7 +259,7 @@ parse(json, { adapters: [dateAdapter] });
 // ⮕ Date
 ```
 
-Or create a serializer pair:
+Or create a custom serializer:
 
 ```ts
 import { createSerializer } from 'json-marshal';
@@ -276,22 +276,22 @@ serializer.parse(json);
 [`tag`](https://smikhalevski.github.io/json-marshal/interfaces/json_marshal.SerializationAdapter.html#tag) is an integer
 that uniquely identifies the adapter during serialization and deserialization.
 
-Tags in range [0, 100) are reserved for internal use. Tags in range [100, 200) are used by
-[built-in adapters](#built-in-adapters).
+> [!IMPORTANT]\
+> Tags in range [0, 100) are reserved for internal use. Tags in range [100, 200) are used by
+> [built-in adapters](#built-in-adapters).
 
-During serialization, each object is passed to the
+During serialization, each value is passed to the
 [`canPack`](https://smikhalevski.github.io/json-marshal/interfaces/json_marshal.SerializationAdapter.html#canPack)
-method which should return `true` if adapter can pack a value as a serializable payload.
+method which should return `true` if an adapter can pack a value as a serializable payload.
 
 Then the [`pack`](https://smikhalevski.github.io/json-marshal/interfaces/json_marshal.SerializationAdapter.html#pack)
 method converts the value into a serializable payload. The payload returned from the
-`pack` method is dehydrated before stringification: circular references and reused references are replaced encoded.
-For example, the tag that references the second object during the depth-first traversal looks kile this: `[0,1]`.
+`pack` method is dehydrated before stringification: circular and repeated references are encoded.
 
 During deserialization,
 [`unpack`](https://smikhalevski.github.io/json-marshal/interfaces/json_marshal.SerializationAdapter.html#unpack) method
-receives the dehydrated payload and must return the shallow value to which references may point. Note that payload isn't
-hydrated at this  stage, so in may still contain encoded refs.
+receives the dehydrated payload and must return the shallow value to which references may point. Note that since payload
+isn't hydrated at this  stage, it may still contain encoded refs.
 
 After payload is unpacked,
 [`hydrate`](https://smikhalevski.github.io/json-marshal/interfaces/json_marshal.SerializationAdapter.html#hydrate)
@@ -316,13 +316,12 @@ const setAdapter: SerializationAdapter<Set<any>, any[]> = {
   },
 
   unpack(payload, options) {
-    // Return an empty set, because payload doesn't contain
-    // hydrated values at this stage
+    // Return an empty Set, we'll populate it with hydrated items later
     return new Set();
   },
 
   hydrate(value, payload, options) {
-    // Add hydrated items to set
+    // Add hydrated items to the Set
     for (const item of payload) {
       value.add(item);
     }
@@ -342,7 +341,7 @@ parse(json, { adapters: [setAdapter] });
 // ⮕ Set { 'aaa', 'bbb' }
 ```
 
-Let's stringify a `Set` that contains itself:
+Let's stringify a `Set` that contains a self-reference:
 
 ```ts
 import { stringify, parse } from 'json-marshal';
