@@ -6,9 +6,9 @@ export const TAG_NEGATIVE_INFINITY = 4;
 export const TAG_BIGINT = 5;
 export const TAG_ARRAY = 6;
 
-export const TAG_DATE = 50;
-export const TAG_ERROR = 51;
-export const TAG_REGEXP = 52;
-export const TAG_SET = 53;
-export const TAG_MAP = 54;
-export const TAG_ARRAY_BUFFER = 55;
+export const TAG_DATE = 100;
+export const TAG_ERROR = 101;
+export const TAG_REGEXP = 102;
+export const TAG_SET = 103;
+export const TAG_MAP = 104;
+export const TAG_ARRAY_BUFFER = 105;

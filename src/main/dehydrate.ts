@@ -33,7 +33,7 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
     if (input === -Infinity) {
       return '[' + TAG_NEGATIVE_INFINITY + ']';
     }
-    if (input === +Infinity) {
+    if (input === Infinity) {
       return '[' + TAG_POSITIVE_INFINITY + ']';
     }
     return '' + input;
@@ -138,9 +138,9 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
   }
 
   // Object
-  let str = '';
+  let json = '';
   let value;
-  let valueStr;
+  let valueJSON;
   let isSeparated = false;
 
   if (!options.isStable) {
@@ -151,16 +151,16 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
         continue;
       }
 
-      valueStr = dehydrate(value, refs, options);
+      valueJSON = dehydrate(value, refs, options);
 
-      if (valueStr === undefined) {
+      if (valueJSON === undefined) {
         continue;
       }
       if (isSeparated) {
-        str += ',';
+        json += ',';
       }
       isSeparated = true;
-      str += jsonStringify(key) + ':' + valueStr;
+      json += jsonStringify(key) + ':' + valueJSON;
     }
   } else {
     const keys = qsort(Object.keys(input));
@@ -172,18 +172,18 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
         continue;
       }
 
-      valueStr = dehydrate(value, refs, options);
+      valueJSON = dehydrate(value, refs, options);
 
-      if (valueStr === undefined) {
+      if (valueJSON === undefined) {
         continue;
       }
       if (isSeparated) {
-        str += ',';
+        json += ',';
       }
       isSeparated = true;
-      str += jsonStringify(keys[i]) + ':' + valueStr;
+      json += jsonStringify(keys[i]) + ':' + valueJSON;
     }
   }
 
-  return '{' + str + '}';
+  return '{' + json + '}';
 }

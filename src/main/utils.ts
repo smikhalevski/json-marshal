@@ -88,17 +88,13 @@ export function checkAdapterTypes(adapters: readonly SerializationAdapter[] | un
   for (let i = 0; i < adapters.length; ++i) {
     const { tag } = adapters[i];
 
-    if (typeof tag !== 'number' || !isInteger(tag)) {
-      throw new Error('Adapter tag is not an integer: ' + tag);
-    }
-
-    if (tag > -1 && tag < 50) {
-      throw new Error('Tags in [0, 100] range are reserved');
+    if (!isInteger(tag) || (tag >= 0 && tag < 100)) {
+      throw new Error('Illegal tag: ' + tag);
     }
 
     for (let j = i + 1; j < adapters.length; ++j) {
       if (adapters[j].tag === tag && adapters[j] !== adapters[i]) {
-        throw new Error('Adapters tags are not unique: ' + tag);
+        throw new Error('Tags are not unique: ' + tag);
       }
     }
   }

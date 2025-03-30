@@ -61,7 +61,7 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
       return -Infinity;
 
     case TAG_POSITIVE_INFINITY:
-      return +Infinity;
+      return Infinity;
 
     case TAG_BIGINT:
       return BigInt(input[1]);
@@ -71,7 +71,7 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
       const value = refs.get(input[1]);
 
       if (value === undefined) {
-        throw new ReferenceError('Unexpected reference: ' + input[1]);
+        throw new ReferenceError('Unresolved reference: ' + input[1]);
       }
       return value;
 
@@ -115,5 +115,5 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
     }
   }
 
-  throw new Error('Unexpected tag: ' + tag);
+  throw new Error('Adapter not found for tag: ' + tag);
 }

@@ -141,11 +141,11 @@ test('Map payload dehydration', () => {
 });
 
 test('Uint8Array dehydration', () => {
-  const aaa = new TextEncoder().encode('aaa bbb ccc').buffer;
+  const aaa = new TextEncoder().encode('aaa bbb ccc');
 
   const options = { adapters: [arrayBufferAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[' + TAG_ARRAY_BUFFER + ',["YWFhIGJiYiBjY2M=",0]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_ARRAY_BUFFER + ',["YWFhIGJiYiBjY2M=",2]]');
 
   const xxx = parse(stringify(aaa, options), options);
 

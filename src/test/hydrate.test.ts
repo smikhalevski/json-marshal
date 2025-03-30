@@ -128,7 +128,7 @@ describe('hydrate', () => {
     });
 
     test('throws if reference is not found', () => {
-      expect(() => hydrate({ aaa: [TAG_REF, 1] }, new Map(), {})).toThrow(new Error('Unexpected reference: 1'));
+      expect(() => hydrate({ aaa: [TAG_REF, 1] }, new Map(), {})).toThrow(new Error('Unresolved reference: 1'));
     });
   });
 
@@ -217,7 +217,7 @@ describe('hydrate', () => {
     });
 
     test('throws if no adapter deserialized the value', () => {
-      expect(() => hydrate({ aaa: [222, 'bbb'] }, new Map(), {})).toThrow(new Error('Unexpected tag: 222'));
+      expect(() => hydrate({ aaa: [222, 'bbb'] }, new Map(), {})).toThrow(new Error('Adapter not found for tag: 222'));
     });
   });
 });
