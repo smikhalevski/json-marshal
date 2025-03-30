@@ -11,27 +11,27 @@
  * @module adapter/set
  */
 import { compareKeys } from '../utils';
-import { dehydrate, DISCARDED } from '../dehydrate';
-import { Tag } from '../Tag';
-import { SerializationAdapter } from '../types';
+import { dehydrate } from '../dehydrate';
+import { Adapter } from '../types';
+import { TAG_SET } from '../Tag';
 
-export default function setAdapter(): SerializationAdapter {
+export default function setAdapter(): Adapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter = {
-  getTag(value, _options) {
-    if (value instanceof Set) {
-      return Tag.SET;
-    }
+const adapter: Adapter<Set<any>, any[]> = {
+  tag: TAG_SET,
+
+  isSupported(value) {
+    return value instanceof Set;
   },
 
-  getPayload(_tag, value, options) {
+  pack(value, options) {
     if (value.size === 0) {
-      return undefined;
+      return [];
     }
 
-    if (!options.stable) {
+    if (!options.isStable) {
       return Array.from(value);
     }
 
@@ -41,14 +41,14 @@ const adapter: SerializationAdapter = {
     for (const item of value) {
       const key = dehydrate(item, refs, options);
 
-      if (key !== DISCARDED) {
+      if (key !== undefined) {
         items.push([key, item]);
       }
       refs.clear();
     }
 
     if (items.length === 0) {
-      return undefined;
+      return [];
     }
 
     items.sort(compareKeys);
@@ -60,17 +60,12 @@ const adapter: SerializationAdapter = {
     return items;
   },
 
-  getValue(tag, _dehydratedPayload, _options) {
-    if (tag === Tag.SET) {
-      return new Set();
-    }
+  unpack(payload, options) {
+    return new Set();
   },
 
-  hydrateValue(_tag, value, hydratedPayload, _options) {
-    if (hydratedPayload === undefined) {
-      return;
-    }
-    for (const item of hydratedPayload) {
+  hydrate(value, payload, options) {
+    for (const item of payload) {
       value.add(item);
     }
   },

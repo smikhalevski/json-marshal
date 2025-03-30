@@ -1,12 +1,18 @@
-export interface SerializationAdapter {
+export type Deflated<T> = { [K in keyof T]: T[K] extends object ? unknown : T[K] };
+
+export interface Adapter<Value = any, Payload = any> {
   /**
-   * Returns the unique tag of the value type, or `undefined` if the adapter doesn't recognize the type of the given
-   * value.
+   * The unique integer tag of the value type.
+   */
+  tag: number;
+
+  /**
+   * Returns `true` if the adapter can pack the {@link value}.
    *
    * @param value The value to get the type tag of.
    * @param options Serialization options.
    */
-  getTag(value: any, options: SerializationOptions): number | undefined;
+  isSupported(value: any, options: SerializationOptions): boolean;
 
   /**
    * Converts value into a serializable payload.
@@ -15,51 +21,48 @@ export interface SerializationAdapter {
    * references. The payload is dehydrated during serialization. If the value itself is returned from this method, then
    * the serialization would proceed as if no adapters were applied.
    *
-   * @param tag The tag returned by {@link getTag} for value.
    * @param value The value for which payload must be produced.
    * @param options Serialization options.
    * @returns The payload that is dehydrated and serialized.
    */
-  getPayload(tag: number, value: any, options: SerializationOptions): any;
+  pack(value: Value, options: SerializationOptions): Payload | undefined;
 
   /**
    * Returns the shallow value to which circular references from the payload may point. Otherwise, returns `undefined`
    * if the adapter doesn't recognize the given tag.
    *
-   * @param tag The tag of the value type.
-   * @param dehydratedPayload The payload that isn't hydrated yet.
+   * @param payload The payload that isn't hydrated yet.
    * @param options Serialization options.
    */
-  getValue(tag: number, dehydratedPayload: any, options: SerializationOptions): any;
+  unpack(payload: Deflated<Payload>, options: SerializationOptions): Value;
 
   /**
-   * Hydrates the value that was previously returned from the {@link getValue} method.
+   * Hydrates the value that was previously returned from the {@link unpack} method.
    *
-   * @param tag The tag of the value type.
-   * @param value The value returned from the {@link getValue} method.
-   * @param hydratedPayload The hydrated payload.
+   * @param value The value returned from the {@link unpack} method.
+   * @param payload The hydrated payload.
    * @param options Serialization options.
    */
-  hydrateValue?(tag: number, value: any, hydratedPayload: any, options: SerializationOptions): void;
+  hydrate?(value: Value, payload: Payload, options: SerializationOptions): void;
 }
 
 export interface SerializationOptions {
   /**
    * The array of adapters that are applied during serialization.
    */
-  adapters?: SerializationAdapter[];
+  adapters?: Adapter[];
 
   /**
    * If `true` then keys are sorted during serialization.
    *
    * @default false
    */
-  stable?: boolean;
+  isStable?: boolean;
 
   /**
    * If `true` then object properties that have an `undefined` value are serialized.
    *
    * @default false
    */
-  undefinedPropertyValuesPreserved?: boolean;
+  isUndefinedPropertyValuesPreserved?: boolean;
 }

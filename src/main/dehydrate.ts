@@ -1,43 +1,41 @@
-import { Tag } from './Tag';
 import { SerializationOptions } from './types';
+import {
+  TAG_ARRAY,
+  TAG_BIGINT,
+  TAG_NAN,
+  TAG_NEGATIVE_INFINITY,
+  TAG_POSITIVE_INFINITY,
+  TAG_REF,
+  TAG_UNDEFINED,
+} from './Tag';
 
-/**
- * Prevents payload from being serialized if returned from the {@link SerializationAdapter.getPayload}.
- */
-export const DISCARDED = Symbol('discarded');
+const { isArray } = Array;
+const jsonStringify = JSON.stringify;
 
-export function dehydrate(
-  input: any,
-  refs: Map<any, number>,
-  options: SerializationOptions
-): string | typeof DISCARDED {
-  if (input === DISCARDED) {
-    return DISCARDED;
-  }
-
+export function dehydrate(input: any, refs: Map<any, number>, options: SerializationOptions): string | undefined {
   if (input === null) {
     return 'null';
   }
 
   if (input === undefined) {
-    return '[' + Tag.UNDEFINED + ']';
+    return '[' + TAG_UNDEFINED + ']';
   }
 
   if (typeof input === 'string') {
-    return JSON.stringify(input);
+    return jsonStringify(input);
   }
 
   if (typeof input === 'number') {
     if (input !== input) {
-      return '[' + Tag.NAN + ']';
+      return '[' + TAG_NAN + ']';
     }
     if (input === -Infinity) {
-      return '[' + Tag.NEGATIVE_INFINITY + ']';
+      return '[' + TAG_NEGATIVE_INFINITY + ']';
     }
     if (input === +Infinity) {
-      return '[' + Tag.POSITIVE_INFINITY + ']';
+      return '[' + TAG_POSITIVE_INFINITY + ']';
     }
-    return String(input);
+    return '' + input;
   }
 
   if (typeof input === 'boolean') {
@@ -45,49 +43,46 @@ export function dehydrate(
   }
 
   if (typeof input === 'bigint') {
-    return '[' + Tag.BIGINT + ',"' + input + '"]';
+    return '[' + TAG_BIGINT + ',"' + input + '"]';
   }
 
   if (typeof input === 'object' || typeof input === 'function' || typeof input === 'symbol') {
     const ref = refs.get(input);
 
     if (ref !== undefined) {
-      return '[' + Tag.REF + ',' + ref + ']';
+      return '[' + TAG_REF + ',' + ref + ']';
     }
     refs.set(input, refs.size);
   }
 
-  const adapters = options.adapters;
+  const { adapters } = options;
 
   if (adapters !== undefined) {
-    for (let adapter, tag, payload, payloadStr, i = 0; i < adapters.length; ++i) {
-      adapter = adapters[i];
-      tag = adapter.getTag(input, options);
+    for (let i = 0; i < adapters.length; ++i) {
+      const adapter = adapters[i];
 
-      if (tag === undefined) {
+      if (!adapter.isSupported(input, options)) {
         continue;
       }
-      if (!Number.isInteger(tag)) {
-        throw new TypeError('Illegal tag: ' + String(tag));
-      }
 
-      payload = adapter.getPayload(tag, input, options);
+      const payload = adapter.pack(input, options);
 
-      if (payload === undefined) {
-        return '[' + tag + ']';
-      }
       if (payload === input) {
         break;
       }
-
-      payloadStr = dehydrate(payload, refs, options);
-
-      if (payloadStr === DISCARDED) {
+      if (payload === undefined) {
         refs.delete(input);
-        return DISCARDED;
+        return;
       }
 
-      return '[' + tag + ',' + payloadStr + ']';
+      const json = dehydrate(payload, refs, options);
+
+      if (json === undefined) {
+        refs.delete(input);
+        return;
+      }
+
+      return '[' + adapter.tag + ',' + json + ']';
     }
   }
 
@@ -110,17 +105,17 @@ export function dehydrate(
 
   if (typeof input === 'function' || typeof input === 'symbol') {
     refs.delete(input);
-    return DISCARDED;
+    return undefined;
   }
 
-  if (Array.isArray(input)) {
+  if (isArray(input)) {
     let str = '';
     let value0;
 
-    for (let valueStr, separated = false, i = 0; i < input.length; ++i) {
-      valueStr = dehydrate(input[i], refs, options);
+    for (let separated = false, i = 0; i < input.length; ++i) {
+      const valueStr = dehydrate(input[i], refs, options);
 
-      if (valueStr === DISCARDED) {
+      if (valueStr === undefined) {
         continue;
       }
       if (separated) {
@@ -138,35 +133,35 @@ export function dehydrate(
     }
 
     // Encoded array
-    return '[' + Tag.ARRAY + ',[' + str + ']]';
+    return '[' + TAG_ARRAY + ',[' + str + ']]';
   }
 
   // Object
   const keys = Object.keys(input);
 
-  if (options.stable) {
+  if (options.isStable) {
     keys.sort();
   }
 
   let str = '';
 
-  for (let value, valueStr, separated = false, i = 0; i < keys.length; ++i) {
+  for (let value, valueStr, isSeparated = false, i = 0; i < keys.length; ++i) {
     value = input[keys[i]];
 
-    if (value === undefined && !options.undefinedPropertyValuesPreserved) {
+    if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
       continue;
     }
 
     valueStr = dehydrate(value, refs, options);
 
-    if (valueStr === DISCARDED) {
+    if (valueStr === undefined) {
       continue;
     }
-    if (separated) {
+    if (isSeparated) {
       str += ',';
     }
-    separated = true;
-    str += JSON.stringify(keys[i]) + ':' + valueStr;
+    isSeparated = true;
+    str += jsonStringify(keys[i]) + ':' + valueStr;
   }
 
   return '{' + str + '}';

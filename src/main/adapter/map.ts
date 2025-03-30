@@ -11,44 +11,44 @@
  * @module adapter/map
  */
 import { compareKeys } from '../utils';
-import { dehydrate, DISCARDED } from '../dehydrate';
-import { Tag } from '../Tag';
-import { SerializationAdapter } from '../types';
+import { dehydrate } from '../dehydrate';
+import { Adapter } from '../types';
+import { TAG_MAP } from '../Tag';
 
-export default function mapAdapter(): SerializationAdapter {
+export default function mapAdapter(): Adapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter = {
-  getTag(value, _options) {
-    if (value instanceof Map) {
-      return Tag.MAP;
-    }
+const adapter: Adapter<Map<any, any>, [any, any][]> = {
+  tag: TAG_MAP,
+
+  isSupported(value) {
+    return value instanceof Map;
   },
 
-  getPayload(_tag, value, options) {
+  pack(value, options) {
     if (value.size === 0) {
-      return undefined;
+      return [];
     }
 
-    if (!options.stable) {
+    if (!options.isStable) {
       return Array.from(value);
     }
 
-    const entries = [];
+    const entries: [any, any][] = [];
     const refs = new Map();
 
     for (const entry of value) {
       const key = dehydrate(entry[0], refs, options);
 
-      if (key !== DISCARDED) {
+      if (key !== undefined) {
         entries.push([key, entry]);
       }
       refs.clear();
     }
 
     if (entries.length === 0) {
-      return undefined;
+      return [];
     }
 
     entries.sort(compareKeys);
@@ -60,17 +60,12 @@ const adapter: SerializationAdapter = {
     return entries;
   },
 
-  getValue(tag, _dehydratedPayload, _options) {
-    if (tag === Tag.MAP) {
-      return new Map();
-    }
+  unpack(payload) {
+    return new Map();
   },
 
-  hydrateValue(_tag, value, hydratedPayload, _options) {
-    if (hydratedPayload === undefined) {
-      return;
-    }
-    for (const entry of hydratedPayload) {
+  hydrate(value, payload) {
+    for (const entry of payload) {
       if (entry.length === 2) {
         value.set(entry[0], entry[1]);
       }

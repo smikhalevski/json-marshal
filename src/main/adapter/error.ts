@@ -11,85 +11,25 @@
  *
  * @module adapter/error
  */
-import { Tag } from '../Tag';
-import { SerializationAdapter } from '../types';
+import { Adapter } from '../types';
+import { TAG_ERROR } from '../Tag';
 
-export default function errorAdapter(): SerializationAdapter {
+export default function errorAdapter(): Adapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter = {
-  getTag(value, _options) {
-    if (typeof DOMException !== 'undefined' && value instanceof DOMException) {
-      return Tag.DOM_EXCEPTION;
-    }
-    if (!(value instanceof Error)) {
-      return undefined;
-    }
-    if (value instanceof EvalError) {
-      return Tag.EVAL_ERROR;
-    }
-    if (value instanceof RangeError) {
-      return Tag.RANGE_ERROR;
-    }
-    if (value instanceof ReferenceError) {
-      return Tag.REFERENCE_ERROR;
-    }
-    if (value instanceof SyntaxError) {
-      return Tag.SYNTAX_ERROR;
-    }
-    if (value instanceof TypeError) {
-      return Tag.TYPE_ERROR;
-    }
-    if (value instanceof URIError) {
-      return Tag.URI_ERROR;
-    }
-    return Tag.ERROR;
+const adapter: Adapter<Error, { name: string; message: string }> = {
+  tag: TAG_ERROR,
+
+  isSupported(value) {
+    return value instanceof Error || value instanceof DOMException;
   },
 
-  getPayload(tag, value, _options) {
-    if (tag === Tag.DOM_EXCEPTION) {
-      return [value.name, value.message];
-    }
-    if (tag !== Tag.ERROR || value.name === 'Error') {
-      return value.message;
-    }
-    return [value.name, value.message];
+  pack(value, options) {
+    return { name: value.constructor.name, message: value.message };
   },
 
-  getValue(tag, dehydratedPayload, _options) {
-    switch (tag) {
-      case Tag.EVAL_ERROR:
-      case Tag.RANGE_ERROR:
-      case Tag.REFERENCE_ERROR:
-      case Tag.SYNTAX_ERROR:
-      case Tag.TYPE_ERROR:
-      case Tag.URI_ERROR:
-        return new constructors[tag](dehydratedPayload);
-
-      case Tag.DOM_EXCEPTION:
-        if (typeof DOMException !== 'undefined') {
-          return new DOMException(dehydratedPayload[1], dehydratedPayload[0]);
-        }
-      // fallthrough
-
-      case Tag.ERROR:
-        if (typeof dehydratedPayload === 'string') {
-          return new Error(dehydratedPayload);
-        }
-
-        const error = new Error(dehydratedPayload[1]);
-        error.name = dehydratedPayload[0];
-        return error;
-    }
+  unpack(payload, options) {
+    return new (((global as any)[payload.name] as ErrorConstructor) || Error)(payload.message);
   },
-};
-
-const constructors = {
-  [Tag.EVAL_ERROR]: EvalError,
-  [Tag.RANGE_ERROR]: RangeError,
-  [Tag.REFERENCE_ERROR]: ReferenceError,
-  [Tag.SYNTAX_ERROR]: SyntaxError,
-  [Tag.TYPE_ERROR]: TypeError,
-  [Tag.URI_ERROR]: URIError,
 };

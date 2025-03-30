@@ -29,23 +29,23 @@ describe('stringify', () => {
     });
   });
 
-  test('json-marshal', measure => {
-    const options = { stable: true };
+  test('json-marshal (all adapters, stable)', measure => {
+    const options = { isStable: true };
 
     measure(() => {
       jsonMarshal.default.stringify(testJson, options);
     });
   });
 
-  test('json-marshal / no adapters, stable', measure => {
-    const options = { stable: true };
+  test('json-marshal (no adapters, stable)', measure => {
+    const options = { isStable: true };
 
     measure(() => {
       jsonMarshal.stringify(testJson, options);
     });
   });
 
-  test('json-marshal / no adapters, unstable', measure => {
+  test('json-marshal (no adapters, unstable)', measure => {
     measure(() => {
       jsonMarshal.stringify(testJson);
     });
@@ -77,15 +77,15 @@ describe('parse', () => {
     });
   });
 
-  test('json-marshal', measure => {
-    const json = jsonMarshal.stringify(testJson);
+  test('json-marshal (all adapters)', measure => {
+    const json = jsonMarshal.default.stringify(testJson);
 
     measure(() => {
-      jsonMarshal.parse(json);
+      jsonMarshal.default.parse(json);
     });
   });
 
-  test('json-marshal / no adapters', measure => {
+  test('json-marshal (no adapters)', measure => {
     const json = jsonMarshal.stringify(testJson);
 
     measure(() => {

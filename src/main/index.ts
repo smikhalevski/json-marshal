@@ -14,13 +14,11 @@ import errorAdapter from './adapter/error';
 import mapAdapter from './adapter/map';
 import regexpAdapter from './adapter/regexp';
 import setAdapter from './adapter/set';
-import { dehydrate, DISCARDED } from './dehydrate';
+import { dehydrate } from './dehydrate';
 import { hydrate } from './hydrate';
-import { Tag } from './Tag';
 import { SerializationOptions } from './types';
 
-export { DISCARDED } from './dehydrate';
-export type { SerializationOptions, SerializationAdapter } from './types';
+export type { SerializationOptions, Adapter } from './types';
 
 /**
  * Serializes value as a JSON string.
@@ -29,9 +27,7 @@ export type { SerializationOptions, SerializationAdapter } from './types';
  * @param options Serialization options.
  */
 export function stringify(value: any, options?: SerializationOptions): string {
-  const valueStr = dehydrate(value, new Map(), options || {});
-
-  return valueStr !== DISCARDED ? valueStr : '[' + Tag.UNDEFINED + ']';
+  return dehydrate(value, new Map(), options || {})!;
 }
 
 /**
@@ -63,8 +59,8 @@ export function createSerializer(options: SerializationOptions = {}) {
 /**
  * The default non-stable serializer that uses all built-in adapters.
  */
-const JSONMarshal = createSerializer({
+const defaultSerializer = createSerializer({
   adapters: [arrayBufferAdapter(), dateAdapter(), errorAdapter(), mapAdapter(), regexpAdapter(), setAdapter()],
 });
 
-export default JSONMarshal;
+export default defaultSerializer;

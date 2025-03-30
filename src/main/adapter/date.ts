@@ -10,27 +10,25 @@
  *
  * @module adapter/date
  */
-import { Tag } from '../Tag';
-import { SerializationAdapter } from '../types';
+import { Adapter } from '../types';
+import { TAG_DATE } from '../Tag';
 
-export default function dateAdapter(): SerializationAdapter {
+export default function dateAdapter(): Adapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter = {
-  getTag(value, _options) {
-    if (value instanceof Date) {
-      return Tag.DATE;
-    }
+const adapter: Adapter<Date, string> = {
+  tag: TAG_DATE,
+
+  isSupported(value) {
+    return value instanceof Date;
   },
 
-  getPayload(_tag, value, _options) {
-    return value.getTime();
+  pack(value) {
+    return value.toISOString();
   },
 
-  getValue(tag, dehydratedPayload, _options) {
-    if (tag === Tag.DATE) {
-      return new Date(dehydratedPayload);
-    }
+  unpack(payload): Date {
+    return new Date(payload);
   },
 };

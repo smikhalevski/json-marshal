@@ -2,10 +2,11 @@
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "noUnusedLocals": true,
     "downlevelIteration": true,
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "strict": true,
     "target": "ES6",
     "module": "ES6",

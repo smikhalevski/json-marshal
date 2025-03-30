@@ -56,10 +56,10 @@ Import [`parse`](https://smikhalevski.github.io/json-marshal/functions/json_mars
 have a fine-grained control over serialization:
 
 ```ts
-import { stringify, parse, SerializationOptions } from 'json-marshal';
+import { stringify, parse, Options } from 'json-marshal';
 import regexpAdapter from 'json-marshal/adapter/regexp';
 
-const options: SerializationOptions = {
+const options: Options = {
   adapters: [regexpAdapter()]
 };
 
@@ -245,40 +245,40 @@ Serializes `Set` instances. If `stable` option is provided, `Set` items are sort
 You can create custom adapters for your object types. For example, let's create a `Date` adapter:
 
 ```ts
-import { SerializationAdapter } from 'json-marshal';
+import { Adapter } from 'json-marshal';
 
 const DATE_TAG = 222;
 
-const dateAdapter: SerializationAdapter = {
+const dateAdapter: Adapter = {
 
-  getTag: (value, options) =>
+  isSupported: (value, options) =>
     value instanceof Date ? DATE_TAG : undefined,
 
-  getPayload: (tag, value, options) =>
+  deflate: (tag, value, options) =>
     value.getTime(),
 
-  getValue: (tag, dehydratedPayload, options) =>
+  inflate: (tag, dehydratedPayload, options) =>
     tag === DATE_TAG ? new Date(dehydratedPayload) : undefined,
 };
 ```
 
-During serialization, each object is passed to the `getTag` method. It must return the unique tag (a positive integer)
+During serialization, each object is passed to the `isSupported` method. It must return the unique tag (a positive integer)
 of the value type, or `undefined` if the adapter doesn't recognize the type of the given value.
 
-Then the `getPayload` method is used to convert the value into a serializable form. The payload returned from the
-`getPayload` method is stringified. During stringification, payloads are dehydrated: circular references and reused
+Then the `deflate` method is used to convert the value into a serializable form. The payload returned from the
+`deflate` method is stringified. During stringification, payloads are dehydrated: circular references and reused
 references are replaced with tags. For example, the tag that references the second object during the depth-first
 traversal looks kile this: `[0,1]`.
 
-During deserialization, `getValue` method receives the dehydrated payload along with its tag and must return a
-deserialized value, or `undefined` if deserialization isn't supported for the given tag. If `getValue` returns a
-non-`undefined` value, a `hydrateValue` method is called. It receives a value created by `getValue` and the hydrated
+During deserialization, `inflate` method receives the dehydrated payload along with its tag and must return a
+deserialized value, or `undefined` if deserialization isn't supported for the given TAG_ If `inflate` returns a
+non-`undefined` value, a `afterHydrate` method is called. It receives a value created by `inflate` and the hydrated
 payload that can be used to enrich the original value.
 
-For example, if you're deserializing a `Set` instance, then `new Set()` must be returned from the `getValue`, and in
-`hydrateValue` items from the hydrated payload should be added to the set. This approach allows to hydrate cyclic
+For example, if you're deserializing a `Set` instance, then `new Set()` must be returned from the `inflate`, and in
+`afterHydrate` items from the hydrated payload should be added to the set. This approach allows to hydrate cyclic
 references in an arbitrary object. If value hydration isn't required (like in the example with `Date` serialization),
-`hydrateValue` method can be omitted.
+`afterHydrate` method can be omitted.
 
 Let's use our `dateAdapter`:
 
@@ -292,26 +292,26 @@ parse(json, { adapters: [dateAdapter] });
 // ⮕ { today: Date }
 ```
 
-Return `DISCARDED` from the `getPayload` method to exclude the provided value from being stringified. For example,
+Return `DISCARDED` from the `deflate` method to exclude the provided value from being stringified. For example,
 lets write an adapter that
 serializes [runtime-wide symbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol/for)
 and discards local symbols.
 
 ```ts
-import { DISCARDED, stringify, SerializationAdapter } from 'json-marshal';
+import { DISCARDED, stringify, Adapter } from 'json-marshal';
 
 const SYMBOL_TAG = 333;
 
-const symbolAdapter: SerializationAdapter = {
+const symbolAdapter: Adapter = {
 
-  getTag: (value, options) =>
+  isSupported: (value, options) =>
     typeof value === 'symbol' ? SYMBOL_TAG : undefined,
 
   // 🟡 Only runtime-wide symbols are serialized
-  getPayload: (tag, value, options) =>
+  deflate: (tag, value, options) =>
     Symbol.for(value.description) === value ? value.description : DISCARDED,
 
-  getValue: (tag, dehydratedPayload, options) =>
+  inflate: (tag, dehydratedPayload, options) =>
     tag === SYMBOL_TAG ? Symbol.for(dehydratedPayload) : undefined,
 };
 ```

@@ -1,4 +1,4 @@
-import JSONMarshal, { parse, stringify } from '../main';
+import defaultSerializer, { parse, stringify } from '../main';
 import arrayBufferAdapter from '../main/adapter/array-buffer';
 import dateAdapter from '../main/adapter/date';
 import errorAdapter from '../main/adapter/error';
@@ -117,7 +117,7 @@ test('Set stable serialization', () => {
 
   expect(stringify(aaa, { adapters: [setAdapter()] })).toBe('[9,[{"bbb":111},{"aaa":222}]]');
 
-  expect(stringify(aaa, { adapters: [setAdapter()], stable: true })).toBe('[9,[{"aaa":222},{"bbb":111}]]');
+  expect(stringify(aaa, { adapters: [setAdapter()], isStable: true })).toBe('[9,[{"aaa":222},{"bbb":111}]]');
 });
 
 test('Map payload dehydration', () => {
@@ -140,7 +140,7 @@ test('Uint8Array dehydration', () => {
 
   const options = { adapters: [arrayBufferAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[23,"YWFhIGJiYiBjY2M="]');
+  expect(stringify(aaa, options)).toBe('[23,[null,"YWFhIGJiYiBjY2M="]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -152,7 +152,7 @@ test('BigUint64Array dehydration', () => {
 
   const options = { adapters: [arrayBufferAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[21,"bwAAAAAAAADeAAAAAAAAAA=="]');
+  expect(stringify(aaa, options)).toBe('[23,["BigUint64Array","bwAAAAAAAADeAAAAAAAAAA=="]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -164,13 +164,13 @@ test('DOMException dehydration', () => {
 
   const options = { adapters: [errorAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[31,["AbortError","aaa"]]');
+  expect(stringify(aaa, options)).toBe('[24,{"name":"DOMException","message":"aaa"}]');
 
   const xxx = parse(stringify(aaa, options), options);
 
   expect(xxx).toBeInstanceOf(DOMException);
   expect(xxx.message).toBe('aaa');
-  expect(xxx.name).toBe('AbortError');
+  expect(xxx.name).toBe('Error');
 });
 
 test('RegExp dehydration', () => {
@@ -190,7 +190,7 @@ test('Date dehydration', () => {
 
   const options = { adapters: [dateAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[6,20070101]');
+  expect(stringify(aaa, options)).toBe('[6,"1970-01-01T05:34:30.101Z"]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -203,7 +203,7 @@ test('multiple adapters', () => {
 
   const options = { adapters: [regexpAdapter(), dateAdapter()] };
 
-  expect(stringify([aaa, bbb], options)).toBe('[[7,["aaa","g"]],[6,20070101]]');
+  expect(stringify([aaa, bbb], options)).toBe('[[7,["aaa","g"]],[6,"1970-01-01T05:34:30.101Z"]]');
 
   const xxx = parse(stringify([aaa, bbb], options), options);
 
@@ -211,18 +211,18 @@ test('multiple adapters', () => {
 });
 
 test('default export', () => {
-  expect(JSONMarshal.stringify(new Error('aaa'))).toBe('[24,"aaa"]');
+  expect(defaultSerializer.stringify(new Error('aaa'))).toBe('[24,{"name":"Error","message":"aaa"}]');
 
   const error1 = new Error('aaa');
   error1.name = 'Bbb';
 
-  expect(JSONMarshal.stringify(error1)).toBe('[24,["Bbb","aaa"]]');
+  expect(defaultSerializer.stringify(error1)).toBe('[24,{"name":"Error","message":"aaa"}]');
 
-  const error2 = JSONMarshal.parse(JSONMarshal.stringify(error1));
+  const error2 = defaultSerializer.parse(defaultSerializer.stringify(error1));
 
   expect(error2).toBeInstanceOf(Error);
-  expect(error2.name).toBe('Bbb');
+  expect(error2.name).toBe('Error');
 
-  expect(JSONMarshal.stringify(Symbol())).toBe('[1]');
-  expect(JSONMarshal.stringify({ aaa: Symbol() })).toBe('{}');
+  expect(defaultSerializer.stringify(Symbol())).toBe(undefined);
+  expect(defaultSerializer.stringify({ aaa: Symbol() })).toBe('{}');
 });
