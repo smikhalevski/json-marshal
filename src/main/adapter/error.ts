@@ -11,85 +11,84 @@
  *
  * @module adapter/error
  */
-import { Tag } from '../Tag';
 import { SerializationAdapter } from '../types';
+import { TAG_ERROR } from '../constants';
 
 export default function errorAdapter(): SerializationAdapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter = {
-  getTag(value, _options) {
-    if (typeof DOMException !== 'undefined' && value instanceof DOMException) {
-      return Tag.DOM_EXCEPTION;
-    }
-    if (!(value instanceof Error)) {
-      return undefined;
-    }
-    if (value instanceof EvalError) {
-      return Tag.EVAL_ERROR;
-    }
-    if (value instanceof RangeError) {
-      return Tag.RANGE_ERROR;
-    }
-    if (value instanceof ReferenceError) {
-      return Tag.REFERENCE_ERROR;
-    }
-    if (value instanceof SyntaxError) {
-      return Tag.SYNTAX_ERROR;
-    }
-    if (value instanceof TypeError) {
-      return Tag.TYPE_ERROR;
-    }
-    if (value instanceof URIError) {
-      return Tag.URI_ERROR;
-    }
-    return Tag.ERROR;
+const KIND_ERROR = 0;
+const KIND_EVAL_ERROR = 1;
+const KIND_RANGE_ERROR = 2;
+const KIND_REFERENCE_ERROR = 3;
+const KIND_SYNTAX_ERROR = 4;
+const KIND_TYPE_ERROR = 5;
+const KIND_URI_ERROR = 6;
+const KIND_DOM_EXCEPTION = 7;
+
+const adapter: SerializationAdapter<Error, [name: string, message: string, kind: number]> = {
+  tag: TAG_ERROR,
+
+  canPack(value) {
+    return value instanceof Error || (typeof DOMException !== 'undefined' && value instanceof DOMException);
   },
 
-  getPayload(tag, value, _options) {
-    if (tag === Tag.DOM_EXCEPTION) {
-      return [value.name, value.message];
+  pack(value, _options) {
+    let kind: number;
+
+    if (value instanceof DOMException) {
+      kind = KIND_DOM_EXCEPTION;
+    } else if (value instanceof EvalError) {
+      kind = KIND_EVAL_ERROR;
+    } else if (value instanceof RangeError) {
+      kind = KIND_RANGE_ERROR;
+    } else if (value instanceof ReferenceError) {
+      kind = KIND_REFERENCE_ERROR;
+    } else if (value instanceof SyntaxError) {
+      kind = KIND_SYNTAX_ERROR;
+    } else if (value instanceof TypeError) {
+      kind = KIND_TYPE_ERROR;
+    } else if (value instanceof URIError) {
+      kind = KIND_URI_ERROR;
+    } else {
+      kind = KIND_ERROR;
     }
-    if (tag !== Tag.ERROR || value.name === 'Error') {
-      return value.message;
-    }
-    return [value.name, value.message];
+
+    return [value.name, value.message, kind];
   },
 
-  getValue(tag, dehydratedPayload, _options) {
-    switch (tag) {
-      case Tag.EVAL_ERROR:
-      case Tag.RANGE_ERROR:
-      case Tag.REFERENCE_ERROR:
-      case Tag.SYNTAX_ERROR:
-      case Tag.TYPE_ERROR:
-      case Tag.URI_ERROR:
-        return new constructors[tag](dehydratedPayload);
+  unpack(payload, _options) {
+    const name = payload[0];
+    const message = payload[1];
+    const kind = payload[2];
 
-      case Tag.DOM_EXCEPTION:
-        if (typeof DOMException !== 'undefined') {
-          return new DOMException(dehydratedPayload[1], dehydratedPayload[0]);
-        }
-      // fallthrough
-
-      case Tag.ERROR:
-        if (typeof dehydratedPayload === 'string') {
-          return new Error(dehydratedPayload);
-        }
-
-        const error = new Error(dehydratedPayload[1]);
-        error.name = dehydratedPayload[0];
-        return error;
+    if (kind === KIND_DOM_EXCEPTION) {
+      return new DOMException(message, name);
     }
-  },
-};
 
-const constructors = {
-  [Tag.EVAL_ERROR]: EvalError,
-  [Tag.RANGE_ERROR]: RangeError,
-  [Tag.REFERENCE_ERROR]: ReferenceError,
-  [Tag.SYNTAX_ERROR]: SyntaxError,
-  [Tag.TYPE_ERROR]: TypeError,
-  [Tag.URI_ERROR]: URIError,
+    let error;
+
+    if (kind === KIND_EVAL_ERROR) {
+      error = new EvalError(message);
+    } else if (kind === KIND_RANGE_ERROR) {
+      error = new RangeError(message);
+    } else if (kind === KIND_REFERENCE_ERROR) {
+      error = new ReferenceError(message);
+    } else if (kind === KIND_SYNTAX_ERROR) {
+      error = new SyntaxError(message);
+    } else if (kind === KIND_TYPE_ERROR) {
+      error = new TypeError(message);
+    } else if (kind === KIND_URI_ERROR) {
+      error = new URIError(message);
+    } else {
+      error = new Error(message);
+    }
+
+    if (error.name === name) {
+      error.name = name;
+    }
+
+    return error;
+  },
 };

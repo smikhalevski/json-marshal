@@ -80,21 +80,25 @@
   },
   "homepage": "https://github.com/smikhalevski/json-marshal#readme",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^12.1.1",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@swc/core": "^1.11.11",
+    "@swc/jest": "^0.2.37",
     "@types/jest": "^29.5.14",
     "devalue": "^5.1.1",
     "fast-json-stable-stringify": "^2.1.0",
-    "flatted": "^3.3.2",
+    "flatted": "^3.3.3",
     "jest": "^29.7.0",
-    "prettier": "^3.3.3",
+    "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
-    "rollup": "^4.27.4",
+    "rollup": "^4.36.0",
     "toofast": "^2.0.0",
-    "ts-jest": "^29.2.5",
     "tslib": "^2.8.1",
     "typedoc": "^0.26.11",
     "typedoc-custom-css": "github:smikhalevski/typedoc-custom-css#master",
     "typedoc-plugin-mdn-links": "^4.0.1",
     "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "algomatic": "^4.0.0"
   }
 }

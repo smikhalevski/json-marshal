@@ -11,27 +11,28 @@
  * @module adapter/set
  */
 import { compareKeys } from '../utils';
-import { dehydrate, DISCARDED } from '../dehydrate';
-import { Tag } from '../Tag';
+import { dehydrate } from '../dehydrate';
 import { SerializationAdapter } from '../types';
+import { TAG_SET } from '../constants';
+import { qsort } from 'algomatic';
 
 export default function setAdapter(): SerializationAdapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter = {
-  getTag(value, _options) {
-    if (value instanceof Set) {
-      return Tag.SET;
-    }
+const adapter: SerializationAdapter<Set<any>, readonly any[]> = {
+  tag: TAG_SET,
+
+  canPack(value) {
+    return value instanceof Set;
   },
 
-  getPayload(_tag, value, options) {
+  pack(value, options) {
     if (value.size === 0) {
-      return undefined;
+      return [];
     }
 
-    if (!options.stable) {
+    if (!options.isStable) {
       return Array.from(value);
     }
 
@@ -39,19 +40,19 @@ const adapter: SerializationAdapter = {
     const refs = new Map();
 
     for (const item of value) {
-      const key = dehydrate(item, refs, options);
+      const itemJSON = dehydrate(item, refs, options);
 
-      if (key !== DISCARDED) {
-        items.push([key, item]);
+      if (itemJSON !== undefined) {
+        items.push([itemJSON, item]);
       }
       refs.clear();
     }
 
     if (items.length === 0) {
-      return undefined;
+      return items;
     }
 
-    items.sort(compareKeys);
+    qsort(items, undefined, compareKeys);
 
     for (let i = 0; i < items.length; ++i) {
       items[i] = items[i][1];
@@ -60,17 +61,12 @@ const adapter: SerializationAdapter = {
     return items;
   },
 
-  getValue(tag, _dehydratedPayload, _options) {
-    if (tag === Tag.SET) {
-      return new Set();
-    }
+  unpack(_payload, _options) {
+    return new Set();
   },
 
-  hydrateValue(_tag, value, hydratedPayload, _options) {
-    if (hydratedPayload === undefined) {
-      return;
-    }
-    for (const item of hydratedPayload) {
+  hydrate(value, payload, _options) {
+    for (const item of payload) {
       value.add(item);
     }
   },

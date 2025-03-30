@@ -1,14 +1,25 @@
 import { SerializationAdapter } from '../main';
 import mapAdapter from '../main/adapter/map';
 import setAdapter from '../main/adapter/set';
-import { dehydrate, DISCARDED } from '../main/dehydrate';
+import { dehydrate } from '../main/dehydrate';
+import {
+  TAG_ARRAY,
+  TAG_BIGINT,
+  TAG_MAP,
+  TAG_NAN,
+  TAG_NEGATIVE_INFINITY,
+  TAG_POSITIVE_INFINITY,
+  TAG_REF,
+  TAG_SET,
+  TAG_UNDEFINED,
+} from '../main/constants';
 
 describe('stringify', () => {
-  describe('discarded', () => {
-    test('stringified as undefined', () => {
-      expect(dehydrate(DISCARDED, new Map(), {})).toBe(DISCARDED);
-    });
-  });
+  // describe('discarded', () => {
+  //   test('stringified as undefined', () => {
+  //     expect(dehydrate(undefined, new Map(), {})).toBe(undefined);
+  //   });
+  // });
 
   describe('null', () => {
     test('stringified as null', () => {
@@ -18,7 +29,7 @@ describe('stringify', () => {
 
   describe('undefined', () => {
     test('stringified as tag', () => {
-      expect(dehydrate(undefined, new Map(), {})).toBe('[1]');
+      expect(dehydrate(undefined, new Map(), {})).toBe('[' + TAG_UNDEFINED + ']');
     });
   });
 
@@ -35,12 +46,12 @@ describe('stringify', () => {
 
   describe('number', () => {
     test('NaN', () => {
-      expect(dehydrate(NaN, new Map(), {})).toBe('[2]');
+      expect(dehydrate(NaN, new Map(), {})).toBe('[' + TAG_NAN + ']');
     });
 
     test('Infinity', () => {
-      expect(dehydrate(Infinity, new Map(), {})).toBe('[3]');
-      expect(dehydrate(-Infinity, new Map(), {})).toBe('[4]');
+      expect(dehydrate(Infinity, new Map(), {})).toBe('[' + TAG_POSITIVE_INFINITY + ']');
+      expect(dehydrate(-Infinity, new Map(), {})).toBe('[' + TAG_NEGATIVE_INFINITY + ']');
     });
 
     test('stringifies String', () => {
@@ -67,17 +78,17 @@ describe('stringify', () => {
 
   describe('bigint', () => {
     test('stringifies as tag', () => {
-      expect(dehydrate(BigInt(111), new Map(), {})).toBe('[5,"111"]');
+      expect(dehydrate(BigInt(111), new Map(), {})).toBe('[' + TAG_BIGINT + ',"111"]');
     });
 
     test('boxed value is unwrapped', () => {
-      expect(dehydrate(Object(BigInt(111)), new Map(), {})).toBe('[5,"111"]');
+      expect(dehydrate(Object(BigInt(111)), new Map(), {})).toBe('[' + TAG_BIGINT + ',"111"]');
     });
   });
 
   describe('function', () => {
     test('discarded', () => {
-      expect(dehydrate(() => undefined, new Map(), {})).toBe(DISCARDED);
+      expect(dehydrate(() => undefined, new Map(), {})).toBe(undefined);
     });
   });
 
@@ -87,48 +98,52 @@ describe('stringify', () => {
     });
 
     test('array with all items discarded is stringified as is', () => {
-      expect(dehydrate([DISCARDED], new Map(), {})).toBe('[]');
-      expect(dehydrate(['aaa', DISCARDED, '111'], new Map(), {})).toBe('["aaa","111"]');
+      expect(dehydrate([undefined], new Map(), {})).toBe('[[' + TAG_UNDEFINED + ']]');
+      expect(dehydrate(['aaa', undefined, '111'], new Map(), {})).toBe('["aaa",[' + TAG_UNDEFINED + '],"111"]');
     });
 
     test('arrays with tag-like first item is tagged', () => {
-      expect(dehydrate([-111], new Map(), {})).toBe('[8,[-111]]');
-      expect(dehydrate([111.222], new Map(), {})).toBe('[8,[111.222]]');
-      expect(dehydrate([111], new Map(), {})).toBe('[8,[111]]');
+      expect(dehydrate([-111], new Map(), {})).toBe('[' + TAG_ARRAY + ',[-111]]');
+      expect(dehydrate([111.222], new Map(), {})).toBe('[' + TAG_ARRAY + ',[111.222]]');
+      expect(dehydrate([111], new Map(), {})).toBe('[' + TAG_ARRAY + ',[111]]');
       expect(dehydrate(['aaa'], new Map(), {})).toBe('["aaa"]');
     });
 
     test('ignores the stable flag', () => {
-      expect(dehydrate(['bbb', 'aaa'], new Map(), { stable: true })).toBe('["bbb","aaa"]');
+      expect(dehydrate(['bbb', 'aaa'], new Map(), { isStable: true })).toBe('["bbb","aaa"]');
     });
   });
 
   describe('Set', () => {
     test('zero-size Set is stringified as a tag', () => {
-      expect(dehydrate(new Set(), new Map(), { adapters: [setAdapter()] })).toBe('[9]');
+      expect(dehydrate(new Set(), new Map(), { adapters: [setAdapter()] })).toBe('[' + TAG_SET + ',[]]');
     });
 
     test('Set with all items discarded is stringified as a tag', () => {
-      expect(dehydrate(new Set([DISCARDED]), new Map(), { adapters: [setAdapter()] })).toBe('[9,[]]');
-      expect(dehydrate(new Set(['aaa', DISCARDED, '111']), new Map(), { adapters: [setAdapter()] })).toBe(
-        '[9,["aaa","111"]]'
+      expect(dehydrate(new Set([undefined]), new Map(), { adapters: [setAdapter()] })).toBe(
+        '[' + TAG_SET + ',[[' + TAG_UNDEFINED + ']]]'
+      );
+      expect(dehydrate(new Set(['aaa', undefined, '111']), new Map(), { adapters: [setAdapter()] })).toBe(
+        '[' + TAG_SET + ',["aaa",[' + TAG_UNDEFINED + '],"111"]]'
       );
     });
 
     test('sorts items if the stable flag is provided', () => {
-      expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()] })).toBe('[9,["bbb","aaa"]]');
-      expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()], stable: true })).toBe(
-        '[9,["aaa","bbb"]]'
+      expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()] })).toBe(
+        '[' + TAG_SET + ',["bbb","aaa"]]'
       );
-      expect(dehydrate(new Set(['bbb', DISCARDED, '111']), new Map(), { adapters: [setAdapter()], stable: true })).toBe(
-        '[9,["111","bbb"]]'
+      expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()], isStable: true })).toBe(
+        '[' + TAG_SET + ',["aaa","bbb"]]'
       );
+      expect(
+        dehydrate(new Set(['bbb', undefined, '111']), new Map(), { adapters: [setAdapter()], isStable: true })
+      ).toBe('[' + TAG_SET + ',["111","bbb",[' + TAG_UNDEFINED + ']]]');
     });
   });
 
   describe('Map', () => {
     test('zero-size Map is stringified as a tag', () => {
-      expect(dehydrate(new Map(), new Map(), { adapters: [mapAdapter()] })).toBe('[10]');
+      expect(dehydrate(new Map(), new Map(), { adapters: [mapAdapter()] })).toBe('[' + TAG_MAP + ',[]]');
     });
 
     // test('entries with discarded keys are discarded', () => {
@@ -141,7 +156,7 @@ describe('stringify', () => {
 
     test('stringifies entries', () => {
       expect(dehydrate(new Map([['aaa', 'bbb']]), new Map(), { adapters: [mapAdapter()] })).toBe(
-        '[10,[["aaa","bbb"]]]'
+        '[' + TAG_MAP + ',[["aaa","bbb"]]]'
       );
     });
 
@@ -151,9 +166,11 @@ describe('stringify', () => {
         ['aaa', 222],
       ]);
 
-      expect(dehydrate(value, new Map(), { adapters: [mapAdapter()] })).toBe('[10,[["bbb",111],["aaa",222]]]');
-      expect(dehydrate(value, new Map(), { adapters: [mapAdapter()], stable: true })).toBe(
-        '[10,[["aaa",222],["bbb",111]]]'
+      expect(dehydrate(value, new Map(), { adapters: [mapAdapter()] })).toBe(
+        '[' + TAG_MAP + ',[["bbb",111],["aaa",222]]]'
+      );
+      expect(dehydrate(value, new Map(), { adapters: [mapAdapter()], isStable: true })).toBe(
+        '[' + TAG_MAP + ',[["aaa",222],["bbb",111]]]'
       );
     });
   });
@@ -168,7 +185,7 @@ describe('stringify', () => {
     });
 
     test('discards properties with discarded values', () => {
-      expect(dehydrate({ aaa: DISCARDED, bbb: 222 }, new Map(), {})).toBe('{"bbb":222}');
+      expect(dehydrate({ aaa: undefined, bbb: 222 }, new Map(), {})).toBe('{"bbb":222}');
     });
 
     test('discards properties with undefined value', () => {
@@ -176,136 +193,129 @@ describe('stringify', () => {
     });
 
     test('preserves properties with undefined value', () => {
-      expect(dehydrate({ aaa: undefined, bbb: 222 }, new Map(), { undefinedPropertyValuesPreserved: true })).toBe(
-        '{"aaa":[1],"bbb":222}'
+      expect(dehydrate({ aaa: undefined, bbb: 222 }, new Map(), { isUndefinedPropertyValuesPreserved: true })).toBe(
+        '{"aaa":[' + TAG_UNDEFINED + '],"bbb":222}'
       );
     });
 
     test('sorts properties by key if the stable flag is provided', () => {
       expect(dehydrate({ bbb: 222, aaa: 111 }, new Map(), {})).toBe('{"bbb":222,"aaa":111}');
-      expect(dehydrate({ bbb: 222, aaa: 111 }, new Map(), { stable: true })).toBe('{"aaa":111,"bbb":222}');
+      expect(dehydrate({ bbb: 222, aaa: 111 }, new Map(), { isStable: true })).toBe('{"aaa":111,"bbb":222}');
     });
   });
 
   describe('adapter', () => {
-    const getTagMock = jest.fn();
-    const getPayloadMock = jest.fn();
-    const getValueMock = jest.fn();
+    const canPackMock = jest.fn();
+    const packMock = jest.fn();
+    const unpackMock = jest.fn();
 
     const adapterMock: SerializationAdapter = {
-      getTag: getTagMock,
-      getPayload: getPayloadMock,
-      getValue: getValueMock,
+      tag: 111,
+      canPack: canPackMock,
+      pack: packMock,
+      unpack: unpackMock,
     };
 
     beforeEach(() => {
-      getTagMock.mockRestore();
-      getPayloadMock.mockRestore();
-      getValueMock.mockRestore();
-    });
-
-    test('throws if adapter returns non-number tag', () => {
-      getTagMock.mockReturnValueOnce('bbb');
-
-      expect(() => dehydrate({}, new Map(), { adapters: [adapterMock] })).toThrow(new Error('Illegal tag: bbb'));
-    });
-
-    test('throws if adapter returns non-integer tag', () => {
-      getTagMock.mockReturnValueOnce(111.222);
-
-      expect(() => dehydrate({}, new Map(), { adapters: [adapterMock] })).toThrow(new Error('Illegal tag: 111.222'));
+      canPackMock.mockRestore();
+      packMock.mockRestore();
+      unpackMock.mockRestore();
     });
 
     test('calls a serializer', () => {
       const value = {};
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValueOnce(111);
-      getPayloadMock.mockReturnValueOnce('aaa');
+      canPackMock.mockReturnValueOnce(111);
+      packMock.mockReturnValueOnce('aaa');
 
       expect(dehydrate(value, new Map(), options)).toBe('[111,"aaa"]');
-      expect(getTagMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
 
     test('discards value is serializer returns DISCARDED', () => {
       const value = {};
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValueOnce(111);
-      getPayloadMock.mockReturnValueOnce(DISCARDED);
+      canPackMock.mockReturnValueOnce(111);
+      packMock.mockReturnValueOnce(undefined);
 
-      expect(dehydrate(value, new Map(), options)).toBe(DISCARDED);
-      expect(getTagMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(dehydrate(value, new Map(), options)).toBe(undefined);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
 
     test('proceeds with serialization if value is returned as is', () => {
       const value = { aaa: 111 };
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValueOnce(111);
-      getPayloadMock.mockReturnValueOnce(value);
+      canPackMock.mockReturnValueOnce(111);
+      packMock.mockReturnValueOnce(value);
 
       expect(dehydrate(value, new Map(), options)).toBe('{"aaa":111}');
-      expect(getTagMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
 
     test('ignores serializer if a undefined is returned', () => {
       const adapterMock2: SerializationAdapter = {
-        getTag: () => 333,
-        getPayload: () => 'bbb',
-        getValue: () => undefined,
+        tag: 333,
+        canPack: () => true,
+        pack: () => 'bbb',
+        unpack: () => undefined,
       };
 
       const value = { aaa: 111 };
 
-      getTagMock.mockReturnValueOnce(undefined);
-      getPayloadMock.mockReturnValueOnce(value);
+      canPackMock.mockReturnValueOnce(undefined);
+      packMock.mockReturnValueOnce(value);
 
       expect(dehydrate(value, new Map(), { adapters: [adapterMock, adapterMock2] })).toBe('[333,"bbb"]');
-      expect(getTagMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenCalledTimes(0);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenCalledTimes(0);
     });
 
     test('serializer receives an object wrapper', () => {
       const value = new String();
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(true);
+      packMock.mockReturnValue('xxx');
 
-      expect(dehydrate(value, new Map(), options)).toBe('[111]');
+      expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
 
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
 
     test('serializer receives a function', () => {
       const value = () => undefined;
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(111);
+      packMock.mockReturnValue('xxx');
 
-      expect(dehydrate(value, new Map(), options)).toBe('[111]');
+      expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
 
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
 
     test('serializer receives a symbol', () => {
       const value = Symbol();
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(111);
+      packMock.mockReturnValue('xxx');
 
-      expect(dehydrate(value, new Map(), options)).toBe('[111]');
+      expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
 
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
 
     test('adapter is called before toJSON', () => {
@@ -314,11 +324,12 @@ describe('stringify', () => {
       };
       const options = { adapters: [adapterMock] };
 
-      getTagMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(111);
+      packMock.mockReturnValue('xxx');
 
-      expect(dehydrate(value, new Map(), options)).toBe('[111]');
-      expect(getPayloadMock).toHaveBeenCalledTimes(1);
-      expect(getPayloadMock).toHaveBeenNthCalledWith(1, 111, value, options);
+      expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
+      expect(packMock).toHaveBeenCalledTimes(1);
+      expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
   });
 
@@ -337,7 +348,7 @@ describe('stringify', () => {
       const aaa: any = {};
       aaa.aaa = aaa;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"aaa":[0,0]}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"aaa":[' + TAG_REF + ',0]}');
     });
 
     test('dehydrates cyclic reference 2', () => {
@@ -345,7 +356,7 @@ describe('stringify', () => {
       aaa.bbb = {};
       aaa.bbb.ccc = aaa;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{"ccc":[0,0]}}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{"ccc":[' + TAG_REF + ',0]}}');
     });
 
     test('dehydrates same object only once', () => {
@@ -354,14 +365,16 @@ describe('stringify', () => {
       aaa.ccc = aaa.bbb;
       aaa.ddd = aaa.bbb;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":[0,1],"ddd":[0,1]}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":[' + TAG_REF + ',1],"ddd":[' + TAG_REF + ',1]}');
     });
 
     test('dehydrates objects as Map keys and values', () => {
       const aaa = {};
       const bbb = new Map().set(aaa, aaa);
 
-      expect(dehydrate(bbb, new Map(), { adapters: [mapAdapter()] })).toBe('[10,[[{},[0,3]]]]');
+      expect(dehydrate(bbb, new Map(), { adapters: [mapAdapter()] })).toBe(
+        '[' + TAG_MAP + ',[[{},[' + TAG_REF + ',3]]]]'
+      );
     });
 
     test('offsets ref in siblings', () => {
@@ -370,7 +383,7 @@ describe('stringify', () => {
       aaa.ccc = {};
       aaa.ddd = aaa.ccc;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":{},"ddd":[0,2]}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":{},"ddd":[' + TAG_REF + ',2]}');
     });
   });
 });

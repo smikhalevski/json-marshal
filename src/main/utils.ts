@@ -1,3 +1,5 @@
+import { SerializationAdapter } from './types';
+
 const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 const lookup = new Uint8Array(128);
@@ -74,4 +76,26 @@ export const decodeBase64 = typeof Buffer !== 'undefined' ? bufferDecodeBase64 :
 
 export function compareKeys([a]: any[], [b]: any[]): number {
   return a === b ? 0 : a < b ? -1 : 1;
+}
+
+const { isInteger } = Number;
+
+export function checkAdapterTypes(adapters: readonly SerializationAdapter[] | undefined): void {
+  if (adapters === undefined) {
+    return;
+  }
+
+  for (let i = 0; i < adapters.length; ++i) {
+    const { tag } = adapters[i];
+
+    if (!isInteger(tag) || (tag >= 0 && tag < 100)) {
+      throw new Error('Illegal tag: ' + tag);
+    }
+
+    for (let j = i + 1; j < adapters.length; ++j) {
+      if (adapters[j].tag === tag && adapters[j] !== adapters[i]) {
+        throw new Error('Tags are not unique: ' + tag);
+      }
+    }
+  }
 }

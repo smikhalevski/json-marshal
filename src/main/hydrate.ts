@@ -1,5 +1,16 @@
-import { Tag } from './Tag';
 import { SerializationOptions } from './types';
+import {
+  TAG_ARRAY,
+  TAG_BIGINT,
+  TAG_NAN,
+  TAG_NEGATIVE_INFINITY,
+  TAG_POSITIVE_INFINITY,
+  TAG_REF,
+  TAG_UNDEFINED,
+} from './constants';
+
+const { isArray } = Array;
+const { isInteger } = Number;
 
 export function hydrate(input: any, refs: Map<number, any>, options: SerializationOptions): any {
   if (input === null || typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {
@@ -7,7 +18,7 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
   }
 
   // Object
-  if (!Array.isArray(input)) {
+  if (!isArray(input)) {
     refs.set(refs.size, input);
 
     for (const key in input) {
@@ -30,7 +41,7 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
   const tag = input[0];
 
   // Regular array
-  if (!Number.isInteger(tag)) {
+  if (!isInteger(tag)) {
     refs.set(refs.size, input);
 
     for (let i = 0; i < input.length; ++i) {
@@ -40,32 +51,32 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
   }
 
   switch (tag) {
-    case Tag.UNDEFINED:
+    case TAG_UNDEFINED:
       return undefined;
 
-    case Tag.NAN:
+    case TAG_NAN:
       return NaN;
 
-    case Tag.NEGATIVE_INFINITY:
+    case TAG_NEGATIVE_INFINITY:
       return -Infinity;
 
-    case Tag.POSITIVE_INFINITY:
-      return +Infinity;
+    case TAG_POSITIVE_INFINITY:
+      return Infinity;
 
-    case Tag.BIGINT:
+    case TAG_BIGINT:
       return BigInt(input[1]);
 
     // Reference
-    case Tag.REF:
+    case TAG_REF:
       const value = refs.get(input[1]);
 
       if (value === undefined) {
-        throw new ReferenceError("Reference isn't hydrated: " + input[1]);
+        throw new ReferenceError('Unresolved reference: ' + input[1]);
       }
       return value;
 
     // Encoded array
-    case Tag.ARRAY:
+    case TAG_ARRAY:
       input = input[1];
       refs.set(refs.size, input);
 
@@ -75,14 +86,19 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
       return input;
   }
 
-  const adapters = options.adapters;
+  const { adapters } = options;
 
   if (adapters !== undefined) {
-    for (let adapter, value, payload, i = 0; i < adapters.length; ++i) {
-      adapter = adapters[i];
-      payload = input[1];
+    for (let i = 0; i < adapters.length; ++i) {
+      const adapter = adapters[i];
 
-      value = adapter.getValue(tag, payload, options);
+      if (adapter.tag !== tag) {
+        continue;
+      }
+
+      let payload = input[1];
+
+      const value = adapter.unpack(payload, options);
 
       if (value === undefined) {
         continue;
@@ -92,12 +108,12 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
 
       payload = hydrate(payload, refs, options);
 
-      if (adapter.hydrateValue !== undefined) {
-        adapter.hydrateValue(tag, value, payload, options);
+      if (adapter.hydrate !== undefined) {
+        adapter.hydrate(value, payload, options);
       }
       return value;
     }
   }
 
-  throw new Error('Unrecognized tag: ' + tag);
+  throw new Error('Adapter not found for tag: ' + tag);
 }

@@ -15,4 +15,5 @@ module.exports = {
     { format: 'es', entryFileNames: '[name].mjs', dir: './lib', preserveModules: true, exports: 'named' },
   ],
   plugins: [typescript({ tsconfig: './tsconfig.build.json' })],
+  external: ['algomatic'],
 };

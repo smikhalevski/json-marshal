@@ -14,13 +14,30 @@ import errorAdapter from './adapter/error';
 import mapAdapter from './adapter/map';
 import regexpAdapter from './adapter/regexp';
 import setAdapter from './adapter/set';
-import { dehydrate, DISCARDED } from './dehydrate';
+import { dehydrate } from './dehydrate';
 import { hydrate } from './hydrate';
-import { Tag } from './Tag';
 import { SerializationOptions } from './types';
+import { checkAdapterTypes } from './utils';
 
-export { DISCARDED } from './dehydrate';
 export type { SerializationOptions, SerializationAdapter } from './types';
+
+const defaultOptions: Readonly<SerializationOptions> = {
+  adapters: undefined,
+  isStable: false,
+  isUndefinedPropertyValuesPreserved: false,
+};
+
+Object.freeze(defaultOptions);
+
+/**
+ * Deserializes a JSON string, that was previously serialized with {@link stringify}.
+ *
+ * @param json The JSON string to deserialize.
+ * @param options Serialization options.
+ */
+export function parse(json: string, options = defaultOptions): any {
+  return hydrate(JSON.parse(json), new Map(), options);
+}
 
 /**
  * Serializes value as a JSON string.
@@ -28,20 +45,10 @@ export type { SerializationOptions, SerializationAdapter } from './types';
  * @param value The value to serialize.
  * @param options Serialization options.
  */
-export function stringify(value: any, options?: SerializationOptions): string {
-  const valueStr = dehydrate(value, new Map(), options || {});
+export function stringify(value: any, options = defaultOptions): string {
+  checkAdapterTypes(options.adapters);
 
-  return valueStr !== DISCARDED ? valueStr : '[' + Tag.UNDEFINED + ']';
-}
-
-/**
- * Deserializes a JSON string, that was previously serialized with {@link stringify}.
- *
- * @param str The JSON string to deserialize.
- * @param options Serialization options.
- */
-export function parse(str: string, options?: SerializationOptions): any {
-  return hydrate(JSON.parse(str), new Map(), options || {});
+  return dehydrate(value, new Map(), options)!;
 }
 
 /**
@@ -49,22 +56,22 @@ export function parse(str: string, options?: SerializationOptions): any {
  *
  * @param options Serialization options.
  */
-export function createSerializer(options: SerializationOptions = {}) {
+export function createSerializer(options = defaultOptions): JSON {
   return {
-    parse(str: string): any {
-      return parse(str, options);
-    },
-    stringify(value: any): string {
-      return stringify(value, options);
-    },
+    [Symbol.toStringTag]: 'JSONMarshal',
+
+    parse: json => parse(json, options),
+    stringify: value => stringify(value, options),
   };
 }
 
 /**
  * The default non-stable serializer that uses all built-in adapters.
  */
-const JSONMarshal = createSerializer({
+const defaultSerializer = createSerializer({
   adapters: [arrayBufferAdapter(), dateAdapter(), errorAdapter(), mapAdapter(), regexpAdapter(), setAdapter()],
+  isStable: false,
+  isUndefinedPropertyValuesPreserved: false,
 });
 
-export default JSONMarshal;
+export default defaultSerializer;
