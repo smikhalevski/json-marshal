@@ -37,6 +37,12 @@ describe('stringify', () => {
     });
   });
 
+  test('json-marshal (all adapters, not stable)', measure => {
+    measure(() => {
+      jsonMarshal.default.stringify(testJson);
+    });
+  });
+
   test('json-marshal (no adapters, stable)', measure => {
     const options = { isStable: true };
 
@@ -45,7 +51,7 @@ describe('stringify', () => {
     });
   });
 
-  test('json-marshal (no adapters, unstable)', measure => {
+  test('json-marshal (no adapters, not stable)', measure => {
     measure(() => {
       jsonMarshal.stringify(testJson);
     });

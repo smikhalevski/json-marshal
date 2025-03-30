@@ -14,22 +14,20 @@
 import { SerializationAdapter } from '../types';
 import { TAG_ERROR } from '../constants';
 
-const enum Kind {
-  ERROR,
-  EVAL_ERROR,
-  RANGE_ERROR,
-  REFERENCE_ERROR,
-  SYNTAX_ERROR,
-  TYPE_ERROR,
-  URI_ERROR,
-  DOM_EXCEPTION,
-}
-
 export default function errorAdapter(): SerializationAdapter {
   return adapter;
 }
 
-const adapter: SerializationAdapter<Error, [name: string, message: string, kind: Kind]> = {
+const KIND_ERROR = 0;
+const KIND_EVAL_ERROR = 1;
+const KIND_RANGE_ERROR = 2;
+const KIND_REFERENCE_ERROR = 3;
+const KIND_SYNTAX_ERROR = 4;
+const KIND_TYPE_ERROR = 5;
+const KIND_URI_ERROR = 6;
+const KIND_DOM_EXCEPTION = 7;
+
+const adapter: SerializationAdapter<Error, [name: string, message: string, kind: number]> = {
   tag: TAG_ERROR,
 
   isSupported(value) {
@@ -37,24 +35,24 @@ const adapter: SerializationAdapter<Error, [name: string, message: string, kind:
   },
 
   pack(value, _options) {
-    let kind: Kind;
+    let kind: number;
 
     if (value instanceof DOMException) {
-      kind = Kind.DOM_EXCEPTION;
+      kind = KIND_DOM_EXCEPTION;
     } else if (value instanceof EvalError) {
-      kind = Kind.EVAL_ERROR;
+      kind = KIND_EVAL_ERROR;
     } else if (value instanceof RangeError) {
-      kind = Kind.RANGE_ERROR;
+      kind = KIND_RANGE_ERROR;
     } else if (value instanceof ReferenceError) {
-      kind = Kind.REFERENCE_ERROR;
+      kind = KIND_REFERENCE_ERROR;
     } else if (value instanceof SyntaxError) {
-      kind = Kind.SYNTAX_ERROR;
+      kind = KIND_SYNTAX_ERROR;
     } else if (value instanceof TypeError) {
-      kind = Kind.TYPE_ERROR;
+      kind = KIND_TYPE_ERROR;
     } else if (value instanceof URIError) {
-      kind = Kind.URI_ERROR;
+      kind = KIND_URI_ERROR;
     } else {
-      kind = Kind.ERROR;
+      kind = KIND_ERROR;
     }
 
     return [value.name, value.message, kind];
@@ -65,23 +63,23 @@ const adapter: SerializationAdapter<Error, [name: string, message: string, kind:
     const message = payload[1];
     const kind = payload[2];
 
-    if (kind === Kind.DOM_EXCEPTION) {
+    if (kind === KIND_DOM_EXCEPTION) {
       return new DOMException(message, name);
     }
 
     let error;
 
-    if (kind === Kind.EVAL_ERROR) {
+    if (kind === KIND_EVAL_ERROR) {
       error = new EvalError(message);
-    } else if (kind === Kind.RANGE_ERROR) {
+    } else if (kind === KIND_RANGE_ERROR) {
       error = new RangeError(message);
-    } else if (kind === Kind.REFERENCE_ERROR) {
+    } else if (kind === KIND_REFERENCE_ERROR) {
       error = new ReferenceError(message);
-    } else if (kind === Kind.SYNTAX_ERROR) {
+    } else if (kind === KIND_SYNTAX_ERROR) {
       error = new SyntaxError(message);
-    } else if (kind === Kind.TYPE_ERROR) {
+    } else if (kind === KIND_TYPE_ERROR) {
       error = new TypeError(message);
-    } else if (kind === Kind.URI_ERROR) {
+    } else if (kind === KIND_URI_ERROR) {
       error = new URIError(message);
     } else {
       error = new Error(message);

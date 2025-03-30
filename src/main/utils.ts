@@ -92,7 +92,7 @@ export function checkAdapterTypes(adapters: readonly SerializationAdapter[] | un
       throw new Error('Adapter tag is not an integer: ' + tag);
     }
 
-    if (tag >= 0 && tag <= 100) {
+    if (tag > -1 && tag < 50) {
       throw new Error('Tags in [0, 100] range are reserved');
     }
 
