@@ -2,7 +2,17 @@ import { SerializationAdapter } from '../main';
 import mapAdapter from '../main/adapter/map';
 import setAdapter from '../main/adapter/set';
 import { dehydrate } from '../main/dehydrate';
-import { TAG_ARRAY, TAG_MAP, TAG_SET, TAG_UNDEFINED } from '../main/Tag';
+import {
+  TAG_ARRAY,
+  TAG_BIGINT,
+  TAG_MAP,
+  TAG_NAN,
+  TAG_NEGATIVE_INFINITY,
+  TAG_POSITIVE_INFINITY,
+  TAG_REF,
+  TAG_SET,
+  TAG_UNDEFINED,
+} from '../main/constants';
 
 describe('stringify', () => {
   // describe('discarded', () => {
@@ -19,7 +29,7 @@ describe('stringify', () => {
 
   describe('undefined', () => {
     test('stringified as tag', () => {
-      expect(dehydrate(undefined, new Map(), {})).toBe('[1]');
+      expect(dehydrate(undefined, new Map(), {})).toBe('[' + TAG_UNDEFINED + ']');
     });
   });
 
@@ -36,12 +46,12 @@ describe('stringify', () => {
 
   describe('number', () => {
     test('NaN', () => {
-      expect(dehydrate(NaN, new Map(), {})).toBe('[2]');
+      expect(dehydrate(NaN, new Map(), {})).toBe('[' + TAG_NAN + ']');
     });
 
     test('Infinity', () => {
-      expect(dehydrate(Infinity, new Map(), {})).toBe('[3]');
-      expect(dehydrate(-Infinity, new Map(), {})).toBe('[4]');
+      expect(dehydrate(Infinity, new Map(), {})).toBe('[' + TAG_POSITIVE_INFINITY + ']');
+      expect(dehydrate(-Infinity, new Map(), {})).toBe('[' + TAG_NEGATIVE_INFINITY + ']');
     });
 
     test('stringifies String', () => {
@@ -68,11 +78,11 @@ describe('stringify', () => {
 
   describe('bigint', () => {
     test('stringifies as tag', () => {
-      expect(dehydrate(BigInt(111), new Map(), {})).toBe('[5,"111"]');
+      expect(dehydrate(BigInt(111), new Map(), {})).toBe('[' + TAG_BIGINT + ',"111"]');
     });
 
     test('boxed value is unwrapped', () => {
-      expect(dehydrate(Object(BigInt(111)), new Map(), {})).toBe('[5,"111"]');
+      expect(dehydrate(Object(BigInt(111)), new Map(), {})).toBe('[' + TAG_BIGINT + ',"111"]');
     });
   });
 
@@ -184,7 +194,7 @@ describe('stringify', () => {
 
     test('preserves properties with undefined value', () => {
       expect(dehydrate({ aaa: undefined, bbb: 222 }, new Map(), { isUndefinedPropertyValuesPreserved: true })).toBe(
-        '{"aaa":[1],"bbb":222}'
+        '{"aaa":[' + TAG_UNDEFINED + '],"bbb":222}'
       );
     });
 
@@ -338,7 +348,7 @@ describe('stringify', () => {
       const aaa: any = {};
       aaa.aaa = aaa;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"aaa":[0,0]}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"aaa":[' + TAG_REF + ',0]}');
     });
 
     test('dehydrates cyclic reference 2', () => {
@@ -346,7 +356,7 @@ describe('stringify', () => {
       aaa.bbb = {};
       aaa.bbb.ccc = aaa;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{"ccc":[0,0]}}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{"ccc":[' + TAG_REF + ',0]}}');
     });
 
     test('dehydrates same object only once', () => {
@@ -355,14 +365,16 @@ describe('stringify', () => {
       aaa.ccc = aaa.bbb;
       aaa.ddd = aaa.bbb;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":[0,1],"ddd":[0,1]}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":[' + TAG_REF + ',1],"ddd":[' + TAG_REF + ',1]}');
     });
 
     test('dehydrates objects as Map keys and values', () => {
       const aaa = {};
       const bbb = new Map().set(aaa, aaa);
 
-      expect(dehydrate(bbb, new Map(), { adapters: [mapAdapter()] })).toBe('[' + TAG_MAP + ',[[{},[0,3]]]]');
+      expect(dehydrate(bbb, new Map(), { adapters: [mapAdapter()] })).toBe(
+        '[' + TAG_MAP + ',[[{},[' + TAG_REF + ',3]]]]'
+      );
     });
 
     test('offsets ref in siblings', () => {
@@ -371,7 +383,7 @@ describe('stringify', () => {
       aaa.ccc = {};
       aaa.ddd = aaa.ccc;
 
-      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":{},"ddd":[0,2]}');
+      expect(dehydrate(aaa, new Map(), {})).toBe('{"bbb":{},"ccc":{},"ddd":[' + TAG_REF + ',2]}');
     });
   });
 });

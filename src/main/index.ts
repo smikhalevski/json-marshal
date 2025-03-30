@@ -17,6 +17,7 @@ import setAdapter from './adapter/set';
 import { dehydrate } from './dehydrate';
 import { hydrate } from './hydrate';
 import { SerializationOptions } from './types';
+import { checkAdapterTypes } from './utils';
 
 export type { SerializationOptions, SerializationAdapter } from './types';
 
@@ -29,6 +30,7 @@ const emptyObject = {};
  * @param options Serialization options.
  */
 export function stringify(value: any, options: SerializationOptions = emptyObject): string {
+  checkAdapterTypes(options.adapters);
   return dehydrate(value, new Map(), options)!;
 }
 

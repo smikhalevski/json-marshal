@@ -12,7 +12,7 @@
  * @module adapter/error
  */
 import { SerializationAdapter } from '../types';
-import { TAG_ERROR } from '../Tag';
+import { TAG_ERROR } from '../constants';
 
 const enum Kind {
   ERROR,

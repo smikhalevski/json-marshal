@@ -7,7 +7,7 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from './Tag';
+} from './constants';
 
 const { isArray } = Array;
 const { isInteger } = Number;

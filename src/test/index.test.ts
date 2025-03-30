@@ -6,7 +6,7 @@ import mapAdapter from '../main/adapter/map';
 import regexpAdapter from '../main/adapter/regexp';
 import setAdapter from '../main/adapter/set';
 import testValue from './test.json';
-import { TAG_ARRAY_BUFFER, TAG_DATE, TAG_ERROR, TAG_MAP, TAG_REGEXP, TAG_SET } from '../main/Tag';
+import { TAG_ARRAY_BUFFER, TAG_DATE, TAG_ERROR, TAG_MAP, TAG_REF, TAG_REGEXP, TAG_SET } from '../main/constants';
 
 test('test.json', () => {
   expect(parse(stringify(testValue))).toStrictEqual(testValue);
@@ -16,7 +16,7 @@ test('circular object 1', () => {
   const aaa: any = {};
   aaa.bbb = aaa;
 
-  expect(stringify(aaa)).toBe('{"bbb":[0,0]}');
+  expect(stringify(aaa)).toBe('{"bbb":[' + TAG_REF + ',0]}');
 
   const xxx = parse(stringify(aaa));
 
@@ -28,7 +28,7 @@ test('circular object 2', () => {
   aaa.bbb = {};
   aaa.bbb.ccc = aaa;
 
-  expect(stringify(aaa)).toBe('{"bbb":{"ccc":[0,0]}}');
+  expect(stringify(aaa)).toBe('{"bbb":{"ccc":[' + TAG_REF + ',0]}}');
 
   const xxx = parse(stringify(aaa));
 
@@ -40,7 +40,7 @@ test('sibling object reference', () => {
   aaa.bbb = {};
   aaa.ccc = aaa.bbb;
 
-  expect(stringify(aaa)).toBe('{"bbb":{},"ccc":[0,1]}');
+  expect(stringify(aaa)).toBe('{"bbb":{},"ccc":[' + TAG_REF + ',1]}');
 
   const xxx = parse(stringify(aaa));
 
@@ -53,7 +53,7 @@ test('circular Set 1', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[' + TAG_SET + ',[[0,0]]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_SET + ',[[' + TAG_REF + ',0]]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -66,7 +66,7 @@ test('circular Set 2', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[[0,0]]]}');
+  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[[' + TAG_REF + ',0]]]}');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -79,7 +79,7 @@ test('circular Set 3', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[[0,1]]]}');
+  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[[' + TAG_REF + ',1]]]}');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -92,7 +92,7 @@ test('sibling Set', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[{"ddd":111}]],"ccc":[0,3]}');
+  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[{"ddd":111}]],"ccc":[' + TAG_REF + ',3]}');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -106,7 +106,9 @@ test('Set payload dehydration', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(bbb, options)).toBe('{"ccc":[' + TAG_SET + ',[[' + TAG_SET + ',[[0,0]]]]],"ddd":[0,3]}');
+  expect(stringify(bbb, options)).toBe(
+    '{"ccc":[' + TAG_SET + ',[[' + TAG_SET + ',[[' + TAG_REF + ',0]]]]],"ddd":[' + TAG_REF + ',3]}'
+  );
 
   const xxx = parse(stringify(bbb, options), options);
 
@@ -130,7 +132,7 @@ test('Map payload dehydration', () => {
 
   const options = { adapters: [mapAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[' + TAG_MAP + ',[[{"bbb":[0,0]},{"ccc":[0,3]}]]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_MAP + ',[[{"bbb":[' + TAG_REF + ',0]},{"ccc":[' + TAG_REF + ',3]}]]]');
 
   const xxx = parse(stringify(aaa, options), options);
 

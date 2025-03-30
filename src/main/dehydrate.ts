@@ -7,7 +7,7 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from './Tag';
+} from './constants';
 import { qsort } from 'algomatic';
 
 const { isArray } = Array;

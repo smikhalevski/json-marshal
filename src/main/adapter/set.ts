@@ -13,7 +13,7 @@
 import { compareKeys } from '../utils';
 import { dehydrate } from '../dehydrate';
 import { SerializationAdapter } from '../types';
-import { TAG_SET } from '../Tag';
+import { TAG_SET } from '../constants';
 import { qsort } from 'algomatic';
 
 export default function setAdapter(): SerializationAdapter {

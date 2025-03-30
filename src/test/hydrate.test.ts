@@ -8,7 +8,7 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from '../main/Tag';
+} from '../main/constants';
 
 describe('hydrate', () => {
   describe('null', () => {

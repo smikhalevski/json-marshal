@@ -14,7 +14,7 @@
 
 import { decodeBase64, encodeBase64 } from '../utils';
 import { SerializationAdapter } from '../types';
-import { TAG_ARRAY_BUFFER } from '../Tag';
+import { TAG_ARRAY_BUFFER } from '../constants';
 
 const enum Kind {
   ARRAY_BUFFER,
