@@ -20,14 +20,16 @@ import { SerializationOptions } from './types';
 
 export type { SerializationOptions, Adapter } from './types';
 
+const emptyObject = {};
+
 /**
  * Serializes value as a JSON string.
  *
  * @param value The value to serialize.
  * @param options Serialization options.
  */
-export function stringify(value: any, options?: SerializationOptions): string {
-  return dehydrate(value, new Map(), options || {})!;
+export function stringify(value: any, options: SerializationOptions = emptyObject): string {
+  return dehydrate(value, new Map(), options)!;
 }
 
 /**
@@ -36,8 +38,8 @@ export function stringify(value: any, options?: SerializationOptions): string {
  * @param str The JSON string to deserialize.
  * @param options Serialization options.
  */
-export function parse(str: string, options?: SerializationOptions): any {
-  return hydrate(JSON.parse(str), new Map(), options || {});
+export function parse(str: string, options: SerializationOptions = emptyObject): any {
+  return hydrate(JSON.parse(str), new Map(), options);
 }
 
 /**

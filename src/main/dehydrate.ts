@@ -8,6 +8,7 @@ import {
   TAG_REF,
   TAG_UNDEFINED,
 } from './Tag';
+import { qsort } from 'algomatic';
 
 const { isArray } = Array;
 const jsonStringify = JSON.stringify;
@@ -137,31 +138,51 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
   }
 
   // Object
-  const keys = Object.keys(input);
-
-  if (options.isStable) {
-    keys.sort();
-  }
-
   let str = '';
+  let value;
+  let valueStr;
+  let isSeparated = false;
 
-  for (let value, valueStr, isSeparated = false, i = 0; i < keys.length; ++i) {
-    value = input[keys[i]];
+  if (!options.isStable) {
+    for (const key in input) {
+      value = input[key];
 
-    if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
-      continue;
+      if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
+        continue;
+      }
+
+      valueStr = dehydrate(value, refs, options);
+
+      if (valueStr === undefined) {
+        continue;
+      }
+      if (isSeparated) {
+        str += ',';
+      }
+      isSeparated = true;
+      str += jsonStringify(key) + ':' + valueStr;
     }
+  } else {
+    const keys = qsort(Object.keys(input));
 
-    valueStr = dehydrate(value, refs, options);
+    for (let i = 0; i < keys.length; ++i) {
+      value = input[keys[i]];
 
-    if (valueStr === undefined) {
-      continue;
+      if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
+        continue;
+      }
+
+      valueStr = dehydrate(value, refs, options);
+
+      if (valueStr === undefined) {
+        continue;
+      }
+      if (isSeparated) {
+        str += ',';
+      }
+      isSeparated = true;
+      str += jsonStringify(keys[i]) + ':' + valueStr;
     }
-    if (isSeparated) {
-      str += ',';
-    }
-    isSeparated = true;
-    str += jsonStringify(keys[i]) + ':' + valueStr;
   }
 
   return '{' + str + '}';

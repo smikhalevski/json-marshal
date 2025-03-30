@@ -143,7 +143,7 @@ stringify({ kill: 'Bill', hello: 'Greg' });
 Provide `stable` option to sort keys in alphabetical order:
 
 ```ts
-stringify({ kill: 'Bill', hello: 'Greg' }, { stable: true });
+stringify({ kill: 'Bill', hello: 'Greg' }, { isStable: true });
 // ⮕ '{"hello":"Greg","kill":"Bill"}'
 ```
 
