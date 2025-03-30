@@ -29,10 +29,8 @@ npm install --save-prod json-marshal
     [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
   - [Errors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error), including
     [`DOMException`](https://developer.mozilla.org/en-US/docs/Web/API/DOMException)
-  - `Symbol` (requires a [custom adapter](#authoring-a-serialization-adapter))
 - [It is _very_ fast.](#performance)
-- [1 kB gzipped.](https://bundlephobia.com/package/json-marshal)
-- Zero dependencies.
+- [2 kB gzipped.](https://pkg-size.dev/json-marshal)
 
 ```ts
 import JSONMarshal from 'json-marshal';
@@ -95,7 +93,6 @@ JSON Marshal supports circular references:
 ```ts
 const obj = {};
 
-// Circular reference
 obj.circularReference = obj;
 
 serialize(obj);
