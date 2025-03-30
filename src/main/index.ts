@@ -18,7 +18,7 @@ import { dehydrate } from './dehydrate';
 import { hydrate } from './hydrate';
 import { SerializationOptions } from './types';
 
-export type { SerializationOptions, Adapter } from './types';
+export type { SerializationOptions, SerializationAdapter } from './types';
 
 const emptyObject = {};
 

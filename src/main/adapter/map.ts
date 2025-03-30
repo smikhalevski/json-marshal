@@ -12,14 +12,15 @@
  */
 import { compareKeys } from '../utils';
 import { dehydrate } from '../dehydrate';
-import { Adapter } from '../types';
+import { SerializationAdapter } from '../types';
 import { TAG_MAP } from '../Tag';
+import { qsort } from 'algomatic';
 
-export default function mapAdapter(): Adapter {
+export default function mapAdapter(): SerializationAdapter {
   return adapter;
 }
 
-const adapter: Adapter<Map<any, any>, [any, any][]> = {
+const adapter: SerializationAdapter<Map<any, any>, readonly any[]> = {
   tag: TAG_MAP,
 
   isSupported(value) {
@@ -35,23 +36,23 @@ const adapter: Adapter<Map<any, any>, [any, any][]> = {
       return Array.from(value);
     }
 
-    const entries: [any, any][] = [];
+    const entries = [];
     const refs = new Map();
 
     for (const entry of value) {
-      const key = dehydrate(entry[0], refs, options);
+      const keyJSON = dehydrate(entry[0], refs, options);
 
-      if (key !== undefined) {
-        entries.push([key, entry]);
+      if (keyJSON !== undefined) {
+        entries.push([keyJSON, entry]);
       }
       refs.clear();
     }
 
     if (entries.length === 0) {
-      return [];
+      return entries;
     }
 
-    entries.sort(compareKeys);
+    qsort(entries, undefined, compareKeys);
 
     for (let i = 0; i < entries.length; ++i) {
       entries[i] = entries[i][1];
@@ -60,11 +61,11 @@ const adapter: Adapter<Map<any, any>, [any, any][]> = {
     return entries;
   },
 
-  unpack(payload) {
+  unpack(_payload, _options) {
     return new Map();
   },
 
-  hydrate(value, payload) {
+  hydrate(value, payload, _options) {
     for (const entry of payload) {
       if (entry.length === 2) {
         value.set(entry[0], entry[1]);

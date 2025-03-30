@@ -1,4 +1,4 @@
-import { Adapter } from '../main';
+import { SerializationAdapter } from '../main';
 import { hydrate } from '../main/hydrate';
 import {
   TAG_ARRAY,
@@ -160,7 +160,7 @@ describe('hydrate', () => {
     const packMock = jest.fn();
     const unpackMock = jest.fn();
 
-    const adapterMock: Adapter = {
+    const adapterMock: SerializationAdapter = {
       tag: 222,
       isSupported: isSupportedMock,
       pack: packMock,
@@ -201,7 +201,7 @@ describe('hydrate', () => {
     });
 
     test('ignores deserializer if it returns undefined', () => {
-      const adapterMock2: Adapter = {
+      const adapterMock2: SerializationAdapter = {
         tag: 222,
         isSupported: () => true,
         pack: () => undefined,

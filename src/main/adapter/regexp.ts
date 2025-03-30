@@ -10,25 +10,25 @@
  *
  * @module adapter/regexp
  */
-import { Adapter } from '../types';
+import { SerializationAdapter } from '../types';
 import { TAG_REGEXP } from '../Tag';
 
-export default function regexpAdapter(): Adapter {
+export default function regexpAdapter(): SerializationAdapter {
   return adapter;
 }
 
-const adapter: Adapter = {
+const adapter: SerializationAdapter<RegExp, [source: string, flags: string]> = {
   tag: TAG_REGEXP,
 
   isSupported(value) {
     return value instanceof RegExp;
   },
 
-  pack(value, options) {
+  pack(value, _options) {
     return [value.source, value.flags];
   },
 
-  unpack(payload, options) {
+  unpack(payload, _options) {
     return new RegExp(payload[0], payload[1]);
   },
 };

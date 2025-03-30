@@ -1,8 +1,8 @@
-import { Adapter } from '../main';
+import { SerializationAdapter } from '../main';
 import mapAdapter from '../main/adapter/map';
 import setAdapter from '../main/adapter/set';
 import { dehydrate } from '../main/dehydrate';
-import { TAG_UNDEFINED } from '../main/Tag';
+import { TAG_ARRAY, TAG_MAP, TAG_SET, TAG_UNDEFINED } from '../main/Tag';
 
 describe('stringify', () => {
   // describe('discarded', () => {
@@ -93,9 +93,9 @@ describe('stringify', () => {
     });
 
     test('arrays with tag-like first item is tagged', () => {
-      expect(dehydrate([-111], new Map(), {})).toBe('[8,[-111]]');
-      expect(dehydrate([111.222], new Map(), {})).toBe('[8,[111.222]]');
-      expect(dehydrate([111], new Map(), {})).toBe('[8,[111]]');
+      expect(dehydrate([-111], new Map(), {})).toBe('[' + TAG_ARRAY + ',[-111]]');
+      expect(dehydrate([111.222], new Map(), {})).toBe('[' + TAG_ARRAY + ',[111.222]]');
+      expect(dehydrate([111], new Map(), {})).toBe('[' + TAG_ARRAY + ',[111]]');
       expect(dehydrate(['aaa'], new Map(), {})).toBe('["aaa"]');
     });
 
@@ -106,32 +106,34 @@ describe('stringify', () => {
 
   describe('Set', () => {
     test('zero-size Set is stringified as a tag', () => {
-      expect(dehydrate(new Set(), new Map(), { adapters: [setAdapter()] })).toBe('[9,[]]');
+      expect(dehydrate(new Set(), new Map(), { adapters: [setAdapter()] })).toBe('[' + TAG_SET + ',[]]');
     });
 
     test('Set with all items discarded is stringified as a tag', () => {
       expect(dehydrate(new Set([undefined]), new Map(), { adapters: [setAdapter()] })).toBe(
-        '[9,[[' + TAG_UNDEFINED + ']]]'
+        '[' + TAG_SET + ',[[' + TAG_UNDEFINED + ']]]'
       );
       expect(dehydrate(new Set(['aaa', undefined, '111']), new Map(), { adapters: [setAdapter()] })).toBe(
-        '[9,["aaa",[' + TAG_UNDEFINED + '],"111"]]'
+        '[' + TAG_SET + ',["aaa",[' + TAG_UNDEFINED + '],"111"]]'
       );
     });
 
     test('sorts items if the stable flag is provided', () => {
-      expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()] })).toBe('[9,["bbb","aaa"]]');
+      expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()] })).toBe(
+        '[' + TAG_SET + ',["bbb","aaa"]]'
+      );
       expect(dehydrate(new Set(['bbb', 'aaa']), new Map(), { adapters: [setAdapter()], isStable: true })).toBe(
-        '[9,["aaa","bbb"]]'
+        '[' + TAG_SET + ',["aaa","bbb"]]'
       );
       expect(
         dehydrate(new Set(['bbb', undefined, '111']), new Map(), { adapters: [setAdapter()], isStable: true })
-      ).toBe('[9,["111","bbb",[' + TAG_UNDEFINED + ']]]');
+      ).toBe('[' + TAG_SET + ',["111","bbb",[' + TAG_UNDEFINED + ']]]');
     });
   });
 
   describe('Map', () => {
     test('zero-size Map is stringified as a tag', () => {
-      expect(dehydrate(new Map(), new Map(), { adapters: [mapAdapter()] })).toBe('[10,[]]');
+      expect(dehydrate(new Map(), new Map(), { adapters: [mapAdapter()] })).toBe('[' + TAG_MAP + ',[]]');
     });
 
     // test('entries with discarded keys are discarded', () => {
@@ -144,7 +146,7 @@ describe('stringify', () => {
 
     test('stringifies entries', () => {
       expect(dehydrate(new Map([['aaa', 'bbb']]), new Map(), { adapters: [mapAdapter()] })).toBe(
-        '[10,[["aaa","bbb"]]]'
+        '[' + TAG_MAP + ',[["aaa","bbb"]]]'
       );
     });
 
@@ -154,9 +156,11 @@ describe('stringify', () => {
         ['aaa', 222],
       ]);
 
-      expect(dehydrate(value, new Map(), { adapters: [mapAdapter()] })).toBe('[10,[["bbb",111],["aaa",222]]]');
+      expect(dehydrate(value, new Map(), { adapters: [mapAdapter()] })).toBe(
+        '[' + TAG_MAP + ',[["bbb",111],["aaa",222]]]'
+      );
       expect(dehydrate(value, new Map(), { adapters: [mapAdapter()], isStable: true })).toBe(
-        '[10,[["aaa",222],["bbb",111]]]'
+        '[' + TAG_MAP + ',[["aaa",222],["bbb",111]]]'
       );
     });
   });
@@ -195,7 +199,7 @@ describe('stringify', () => {
     const packMock = jest.fn();
     const unpackMock = jest.fn();
 
-    const adapterMock: Adapter = {
+    const adapterMock: SerializationAdapter = {
       tag: 111,
       isSupported: isSupportedMock,
       pack: packMock,
@@ -248,7 +252,7 @@ describe('stringify', () => {
     });
 
     test('ignores serializer if a undefined is returned', () => {
-      const adapterMock2: Adapter = {
+      const adapterMock2: SerializationAdapter = {
         tag: 333,
         isSupported: () => true,
         pack: () => 'bbb',
@@ -358,7 +362,7 @@ describe('stringify', () => {
       const aaa = {};
       const bbb = new Map().set(aaa, aaa);
 
-      expect(dehydrate(bbb, new Map(), { adapters: [mapAdapter()] })).toBe('[10,[[{},[0,3]]]]');
+      expect(dehydrate(bbb, new Map(), { adapters: [mapAdapter()] })).toBe('[' + TAG_MAP + ',[[{},[0,3]]]]');
     });
 
     test('offsets ref in siblings', () => {

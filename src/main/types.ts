@@ -1,6 +1,6 @@
 export type Deflated<T> = { [K in keyof T]: T[K] extends object ? unknown : T[K] };
 
-export interface Adapter<Value = any, Payload = any> {
+export interface SerializationAdapter<Value = any, Payload = any> {
   /**
    * The unique integer tag of the value type.
    */
@@ -50,7 +50,7 @@ export interface SerializationOptions {
   /**
    * The array of adapters that are applied during serialization.
    */
-  adapters?: Adapter[];
+  adapters?: SerializationAdapter[];
 
   /**
    * If `true` then keys are sorted during serialization.

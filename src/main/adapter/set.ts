@@ -12,14 +12,15 @@
  */
 import { compareKeys } from '../utils';
 import { dehydrate } from '../dehydrate';
-import { Adapter } from '../types';
+import { SerializationAdapter } from '../types';
 import { TAG_SET } from '../Tag';
+import { qsort } from 'algomatic';
 
-export default function setAdapter(): Adapter {
+export default function setAdapter(): SerializationAdapter {
   return adapter;
 }
 
-const adapter: Adapter<Set<any>, any[]> = {
+const adapter: SerializationAdapter<Set<any>, readonly any[]> = {
   tag: TAG_SET,
 
   isSupported(value) {
@@ -39,19 +40,19 @@ const adapter: Adapter<Set<any>, any[]> = {
     const refs = new Map();
 
     for (const item of value) {
-      const key = dehydrate(item, refs, options);
+      const itemJSON = dehydrate(item, refs, options);
 
-      if (key !== undefined) {
-        items.push([key, item]);
+      if (itemJSON !== undefined) {
+        items.push([itemJSON, item]);
       }
       refs.clear();
     }
 
     if (items.length === 0) {
-      return [];
+      return items;
     }
 
-    items.sort(compareKeys);
+    qsort(items, undefined, compareKeys);
 
     for (let i = 0; i < items.length; ++i) {
       items[i] = items[i][1];
@@ -60,11 +61,11 @@ const adapter: Adapter<Set<any>, any[]> = {
     return items;
   },
 
-  unpack(payload, options) {
+  unpack(_payload, _options) {
     return new Set();
   },
 
-  hydrate(value, payload, options) {
+  hydrate(value, payload, _options) {
     for (const item of payload) {
       value.add(item);
     }

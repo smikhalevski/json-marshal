@@ -6,6 +6,7 @@ import mapAdapter from '../main/adapter/map';
 import regexpAdapter from '../main/adapter/regexp';
 import setAdapter from '../main/adapter/set';
 import testValue from './test.json';
+import { TAG_ARRAY_BUFFER, TAG_DATE, TAG_ERROR, TAG_MAP, TAG_REGEXP, TAG_SET } from '../main/Tag';
 
 test('test.json', () => {
   expect(parse(stringify(testValue))).toStrictEqual(testValue);
@@ -52,7 +53,7 @@ test('circular Set 1', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[9,[[0,0]]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_SET + ',[[0,0]]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -65,7 +66,7 @@ test('circular Set 2', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('{"bbb":[9,[[0,0]]]}');
+  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[[0,0]]]}');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -78,7 +79,7 @@ test('circular Set 3', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('{"bbb":[9,[[0,1]]]}');
+  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[[0,1]]]}');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -91,7 +92,7 @@ test('sibling Set', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('{"bbb":[9,[{"ddd":111}]],"ccc":[0,3]}');
+  expect(stringify(aaa, options)).toBe('{"bbb":[' + TAG_SET + ',[{"ddd":111}]],"ccc":[0,3]}');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -105,7 +106,7 @@ test('Set payload dehydration', () => {
 
   const options = { adapters: [setAdapter()] };
 
-  expect(stringify(bbb, options)).toBe('{"ccc":[9,[[9,[[0,0]]]]],"ddd":[0,3]}');
+  expect(stringify(bbb, options)).toBe('{"ccc":[' + TAG_SET + ',[[' + TAG_SET + ',[[0,0]]]]],"ddd":[0,3]}');
 
   const xxx = parse(stringify(bbb, options), options);
 
@@ -115,9 +116,11 @@ test('Set payload dehydration', () => {
 test('Set stable serialization', () => {
   const aaa = new Set([{ bbb: 111 }, { aaa: 222 }]);
 
-  expect(stringify(aaa, { adapters: [setAdapter()] })).toBe('[9,[{"bbb":111},{"aaa":222}]]');
+  expect(stringify(aaa, { adapters: [setAdapter()] })).toBe('[' + TAG_SET + ',[{"bbb":111},{"aaa":222}]]');
 
-  expect(stringify(aaa, { adapters: [setAdapter()], isStable: true })).toBe('[9,[{"aaa":222},{"bbb":111}]]');
+  expect(stringify(aaa, { adapters: [setAdapter()], isStable: true })).toBe(
+    '[' + TAG_SET + ',[{"aaa":222},{"bbb":111}]]'
+  );
 });
 
 test('Map payload dehydration', () => {
@@ -127,7 +130,7 @@ test('Map payload dehydration', () => {
 
   const options = { adapters: [mapAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[10,[[{"bbb":[0,0]},{"ccc":[0,3]}]]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_MAP + ',[[{"bbb":[0,0]},{"ccc":[0,3]}]]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -140,7 +143,7 @@ test('Uint8Array dehydration', () => {
 
   const options = { adapters: [arrayBufferAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[23,[null,"YWFhIGJiYiBjY2M="]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_ARRAY_BUFFER + ',["YWFhIGJiYiBjY2M=",0]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -152,7 +155,7 @@ test('BigUint64Array dehydration', () => {
 
   const options = { adapters: [arrayBufferAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[23,["BigUint64Array","bwAAAAAAAADeAAAAAAAAAA=="]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_ARRAY_BUFFER + ',["bwAAAAAAAADeAAAAAAAAAA==",11]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -164,13 +167,13 @@ test('DOMException dehydration', () => {
 
   const options = { adapters: [errorAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[24,{"name":"DOMException","message":"aaa"}]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_ERROR + ',["AbortError","aaa",7]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
   expect(xxx).toBeInstanceOf(DOMException);
   expect(xxx.message).toBe('aaa');
-  expect(xxx.name).toBe('Error');
+  expect(xxx.name).toBe('AbortError');
 });
 
 test('RegExp dehydration', () => {
@@ -178,7 +181,7 @@ test('RegExp dehydration', () => {
 
   const options = { adapters: [regexpAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[7,["aaa","g"]]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_REGEXP + ',["aaa","g"]]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -190,7 +193,7 @@ test('Date dehydration', () => {
 
   const options = { adapters: [dateAdapter()] };
 
-  expect(stringify(aaa, options)).toBe('[6,"1970-01-01T05:34:30.101Z"]');
+  expect(stringify(aaa, options)).toBe('[' + TAG_DATE + ',"1970-01-01T05:34:30.101Z"]');
 
   const xxx = parse(stringify(aaa, options), options);
 
@@ -203,7 +206,9 @@ test('multiple adapters', () => {
 
   const options = { adapters: [regexpAdapter(), dateAdapter()] };
 
-  expect(stringify([aaa, bbb], options)).toBe('[[7,["aaa","g"]],[6,"1970-01-01T05:34:30.101Z"]]');
+  expect(stringify([aaa, bbb], options)).toBe(
+    '[[' + TAG_REGEXP + ',["aaa","g"]],[' + TAG_DATE + ',"1970-01-01T05:34:30.101Z"]]'
+  );
 
   const xxx = parse(stringify([aaa, bbb], options), options);
 
@@ -211,12 +216,12 @@ test('multiple adapters', () => {
 });
 
 test('default export', () => {
-  expect(defaultSerializer.stringify(new Error('aaa'))).toBe('[24,{"name":"Error","message":"aaa"}]');
+  expect(defaultSerializer.stringify(new Error('aaa'))).toBe('[' + TAG_ERROR + ',["Error","aaa",0]]');
 
   const error1 = new Error('aaa');
   error1.name = 'Bbb';
 
-  expect(defaultSerializer.stringify(error1)).toBe('[24,{"name":"Error","message":"aaa"}]');
+  expect(defaultSerializer.stringify(error1)).toBe('[' + TAG_ERROR + ',["Bbb","aaa",0]]');
 
   const error2 = defaultSerializer.parse(defaultSerializer.stringify(error1));
 
