@@ -30,7 +30,7 @@ const KIND_DOM_EXCEPTION = 7;
 const adapter: SerializationAdapter<Error, [name: string, message: string, kind: number]> = {
   tag: TAG_ERROR,
 
-  isSupported(value) {
+  canPack(value) {
     return value instanceof Error || (typeof DOMException !== 'undefined' && value instanceof DOMException);
   },
 

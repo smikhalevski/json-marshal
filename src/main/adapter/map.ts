@@ -23,7 +23,7 @@ export default function mapAdapter(): SerializationAdapter {
 const adapter: SerializationAdapter<Map<any, any>, readonly any[]> = {
   tag: TAG_MAP,
 
-  isSupported(value) {
+  canPack(value) {
     return value instanceof Map;
   },
 

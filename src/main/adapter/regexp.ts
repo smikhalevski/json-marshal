@@ -20,7 +20,7 @@ export default function regexpAdapter(): SerializationAdapter {
 const adapter: SerializationAdapter<RegExp, [source: string, flags: string]> = {
   tag: TAG_REGEXP,
 
-  isSupported(value) {
+  canPack(value) {
     return value instanceof RegExp;
   },
 

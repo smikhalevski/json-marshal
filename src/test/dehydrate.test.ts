@@ -205,19 +205,19 @@ describe('stringify', () => {
   });
 
   describe('adapter', () => {
-    const isSupportedMock = jest.fn();
+    const canPackMock = jest.fn();
     const packMock = jest.fn();
     const unpackMock = jest.fn();
 
     const adapterMock: SerializationAdapter = {
       tag: 111,
-      isSupported: isSupportedMock,
+      canPack: canPackMock,
       pack: packMock,
       unpack: unpackMock,
     };
 
     beforeEach(() => {
-      isSupportedMock.mockRestore();
+      canPackMock.mockRestore();
       packMock.mockRestore();
       unpackMock.mockRestore();
     });
@@ -226,11 +226,11 @@ describe('stringify', () => {
       const value = {};
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValueOnce(111);
+      canPackMock.mockReturnValueOnce(111);
       packMock.mockReturnValueOnce('aaa');
 
       expect(dehydrate(value, new Map(), options)).toBe('[111,"aaa"]');
-      expect(isSupportedMock).toHaveBeenCalledTimes(1);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
@@ -239,11 +239,11 @@ describe('stringify', () => {
       const value = {};
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValueOnce(111);
+      canPackMock.mockReturnValueOnce(111);
       packMock.mockReturnValueOnce(undefined);
 
       expect(dehydrate(value, new Map(), options)).toBe(undefined);
-      expect(isSupportedMock).toHaveBeenCalledTimes(1);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
@@ -252,11 +252,11 @@ describe('stringify', () => {
       const value = { aaa: 111 };
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValueOnce(111);
+      canPackMock.mockReturnValueOnce(111);
       packMock.mockReturnValueOnce(value);
 
       expect(dehydrate(value, new Map(), options)).toBe('{"aaa":111}');
-      expect(isSupportedMock).toHaveBeenCalledTimes(1);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenNthCalledWith(1, value, options);
     });
@@ -264,18 +264,18 @@ describe('stringify', () => {
     test('ignores serializer if a undefined is returned', () => {
       const adapterMock2: SerializationAdapter = {
         tag: 333,
-        isSupported: () => true,
+        canPack: () => true,
         pack: () => 'bbb',
         unpack: () => undefined,
       };
 
       const value = { aaa: 111 };
 
-      isSupportedMock.mockReturnValueOnce(undefined);
+      canPackMock.mockReturnValueOnce(undefined);
       packMock.mockReturnValueOnce(value);
 
       expect(dehydrate(value, new Map(), { adapters: [adapterMock, adapterMock2] })).toBe('[333,"bbb"]');
-      expect(isSupportedMock).toHaveBeenCalledTimes(1);
+      expect(canPackMock).toHaveBeenCalledTimes(1);
       expect(packMock).toHaveBeenCalledTimes(0);
     });
 
@@ -283,7 +283,7 @@ describe('stringify', () => {
       const value = new String();
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValue(true);
+      canPackMock.mockReturnValue(true);
       packMock.mockReturnValue('xxx');
 
       expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
@@ -296,7 +296,7 @@ describe('stringify', () => {
       const value = () => undefined;
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(111);
       packMock.mockReturnValue('xxx');
 
       expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
@@ -309,7 +309,7 @@ describe('stringify', () => {
       const value = Symbol();
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(111);
       packMock.mockReturnValue('xxx');
 
       expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');
@@ -324,7 +324,7 @@ describe('stringify', () => {
       };
       const options = { adapters: [adapterMock] };
 
-      isSupportedMock.mockReturnValue(111);
+      canPackMock.mockReturnValue(111);
       packMock.mockReturnValue('xxx');
 
       expect(dehydrate(value, new Map(), options)).toBe('[111,"xxx"]');

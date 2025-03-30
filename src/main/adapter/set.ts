@@ -23,7 +23,7 @@ export default function setAdapter(): SerializationAdapter {
 const adapter: SerializationAdapter<Set<any>, readonly any[]> = {
   tag: TAG_SET,
 
-  isSupported(value) {
+  canPack(value) {
     return value instanceof Set;
   },
 

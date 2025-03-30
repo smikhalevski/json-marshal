@@ -23,7 +23,7 @@ export interface SerializationAdapter<Value = any, Payload = any> {
    * @param value The value to get the type tag of.
    * @param options Serialization options.
    */
-  isSupported(value: any, options: Readonly<SerializationOptions>): boolean;
+  canPack(value: any, options: Readonly<SerializationOptions>): boolean;
 
   /**
    * Converts value into a serializable payload.

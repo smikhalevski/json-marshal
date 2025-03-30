@@ -62,7 +62,7 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
     for (let i = 0; i < adapters.length; ++i) {
       const adapter = adapters[i];
 
-      if (!adapter.isSupported(input, options)) {
+      if (!adapter.canPack(input, options)) {
         continue;
       }
 

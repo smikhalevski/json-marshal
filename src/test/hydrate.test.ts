@@ -156,19 +156,19 @@ describe('hydrate', () => {
   });
 
   describe('adapters', () => {
-    const isSupportedMock = jest.fn();
+    const canPackMock = jest.fn();
     const packMock = jest.fn();
     const unpackMock = jest.fn();
 
     const adapterMock: SerializationAdapter = {
       tag: 222,
-      isSupported: isSupportedMock,
+      canPack: canPackMock,
       pack: packMock,
       unpack: unpackMock,
     };
 
     beforeEach(() => {
-      isSupportedMock.mockRestore();
+      canPackMock.mockRestore();
       packMock.mockRestore();
       unpackMock.mockRestore();
     });
@@ -179,7 +179,7 @@ describe('hydrate', () => {
       unpackMock.mockReturnValueOnce('bbb');
 
       expect(hydrate([222, 'aaa'], new Map(), options)).toBe('bbb');
-      expect(isSupportedMock).toHaveBeenCalledTimes(0);
+      expect(canPackMock).toHaveBeenCalledTimes(0);
       expect(packMock).toHaveBeenCalledTimes(0);
       expect(unpackMock).toHaveBeenCalledTimes(1);
       expect(unpackMock).toHaveBeenNthCalledWith(1, 'aaa', options);
@@ -191,7 +191,7 @@ describe('hydrate', () => {
       const data = { aaa: [222, { bbb: [TAG_REF, 0] }] };
 
       expect(hydrate(data, new Map(), { adapters: [adapterMock] })).toStrictEqual({ aaa: 'bbb' });
-      expect(isSupportedMock).toHaveBeenCalledTimes(0);
+      expect(canPackMock).toHaveBeenCalledTimes(0);
       expect(packMock).toHaveBeenCalledTimes(0);
       expect(unpackMock).toHaveBeenCalledTimes(1);
 
@@ -203,7 +203,7 @@ describe('hydrate', () => {
     test('ignores deserializer if it returns undefined', () => {
       const adapterMock2: SerializationAdapter = {
         tag: 222,
-        isSupported: () => true,
+        canPack: () => true,
         pack: () => undefined,
         unpack: () => 'xxx',
       };
@@ -211,7 +211,7 @@ describe('hydrate', () => {
       const data = { aaa: [222, 'bbb'] };
 
       expect(hydrate(data, new Map(), { adapters: [adapterMock, adapterMock2] })).toStrictEqual({ aaa: 'xxx' });
-      expect(isSupportedMock).toHaveBeenCalledTimes(0);
+      expect(canPackMock).toHaveBeenCalledTimes(0);
       expect(packMock).toHaveBeenCalledTimes(0);
       expect(unpackMock).toHaveBeenCalledTimes(1);
     });

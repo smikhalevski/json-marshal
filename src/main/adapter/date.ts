@@ -20,7 +20,7 @@ export default function dateAdapter(): SerializationAdapter {
 const adapter: SerializationAdapter<Date, string> = {
   tag: TAG_DATE,
 
-  isSupported(value) {
+  canPack(value) {
     return value instanceof Date;
   },
 

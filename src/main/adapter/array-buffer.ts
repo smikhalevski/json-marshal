@@ -37,7 +37,7 @@ const KIND_DATA_VIEW = 12;
 const adapter: SerializationAdapter<ArrayBuffer | ArrayBufferView, [base64: string, kind: number]> = {
   tag: TAG_ARRAY_BUFFER,
 
-  isSupported(value) {
+  canPack(value) {
     return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
   },
 
