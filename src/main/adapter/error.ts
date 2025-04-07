@@ -85,7 +85,7 @@ const adapter: SerializationAdapter<Error, [name: string, message: string, kind:
       error = new Error(message);
     }
 
-    if (error.name === name) {
+    if (error.name !== name) {
       error.name = name;
     }
 

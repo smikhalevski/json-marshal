@@ -228,7 +228,7 @@ test('default export', () => {
   const error2 = defaultSerializer.parse(defaultSerializer.stringify(error1));
 
   expect(error2).toBeInstanceOf(Error);
-  expect(error2.name).toBe('Error');
+  expect(error2.name).toBe('Bbb');
 
   expect(defaultSerializer.stringify(Symbol())).toBe(undefined);
   expect(defaultSerializer.stringify({ aaa: Symbol() })).toBe('{}');
