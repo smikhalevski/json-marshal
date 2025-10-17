@@ -1,9 +1,5 @@
 <p align="center">
-  <a href="#readme"><picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./assets/logo-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="./assets/logo-light.png" />
-    <img alt="JSON Marshal" src="./assets/logo-light.png" width="250" />
-  </picture></a>
+  <a href="#readme"><img alt="JSON Marshal" src="./assets/logo.png" width="250" /></a>
 </p>
 
 <br>
@@ -13,24 +9,13 @@ npm install --save-prod json-marshal
 ```
 
 - Supports circular references.
-- Serialization redundancy is zero: never serializes the same object twice.
 - Supports stable serialization.
-- [Can serialize anything via adapters.](#serialization-adapters)
-- Supports many data types out-of-the-box:
-  - `undefined`
-  - `NaN` and `Infinity`
-  - `BigInt`
-  - `Date`
-  - `RegExp`
-  - `Map`
-  - `Set`
-  - [Typed arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray#typedarray_objects),
-    [`DataView`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView) and
-    [`ArrayBuffer`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer)
-  - [Errors](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error), including
-    [`DOMException`](https://developer.mozilla.org/en-US/docs/Web/API/DOMException)
-- [It is _very_ fast.](#performance)
-- [2 kB gzipped.](https://pkg-size.dev/json-marshal)
+- Zero serialization redundancy — never serializes the same object twice.
+- Zero dependencies.
+- [Can serialize any data type via adapters.](#serialization-adapters)
+- [Supports many data types out of the box.](#built-in-adapters)
+- [Extremely fast.](#performance)
+- [Only 2 kB gzipped.](https://pkg-size.dev/json-marshal)
 
 ```ts
 import JSONMarshal from 'json-marshal';
@@ -99,7 +84,7 @@ serialize(obj);
 // ⮕ '{"circularReference":[0,0]}'
 ```
 
-Out-of-the-box `undefined`, `NaN`, `Infinity`, and `BigInt` are stringified:
+Out of the box `undefined`, `NaN`, `Infinity`, and `BigInt` are stringified:
 
 ```ts
 stringify(undefined);
@@ -274,8 +259,7 @@ serializer.parse(json);
 that uniquely identifies the adapter during serialization and deserialization.
 
 > [!IMPORTANT]\
-> Tags in range [0, 100) are reserved for internal use. Tags in range [100, 200) are used by
-> [built-in adapters](#built-in-adapters).
+> Tags in range [0, 199] are reserved for internal use and [built-in adapters](#built-in-adapters).
 
 During serialization, each value is passed to the
 [`canPack`](https://smikhalevski.github.io/json-marshal/interfaces/json_marshal.SerializationAdapter.html#canPack)

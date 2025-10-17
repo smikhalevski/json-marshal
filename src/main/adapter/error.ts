@@ -11,8 +11,8 @@
  *
  * @module adapter/error
  */
-import { SerializationAdapter } from '../types';
-import { TAG_ERROR } from '../constants';
+import { SerializationAdapter } from '../types.js';
+import { TAG_ERROR } from '../constants.js';
 
 export default function errorAdapter(): SerializationAdapter {
   return adapter;

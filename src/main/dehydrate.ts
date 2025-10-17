@@ -1,4 +1,4 @@
-import { SerializationOptions } from './types';
+import { SerializationOptions } from './types.js';
 import {
   TAG_ARRAY,
   TAG_BIGINT,
@@ -7,11 +7,9 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from './constants';
-import { qsort } from 'algomatic';
+} from './constants.js';
 
 const { isArray } = Array;
-const jsonStringify = JSON.stringify;
 
 export function dehydrate(input: any, refs: Map<any, number>, options: SerializationOptions): string | undefined {
   if (input === null) {
@@ -23,7 +21,7 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
   }
 
   if (typeof input === 'string') {
-    return jsonStringify(input);
+    return JSON.stringify(input);
   }
 
   if (typeof input === 'number') {
@@ -160,10 +158,10 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
         json += ',';
       }
       isSeparated = true;
-      json += jsonStringify(key) + ':' + valueJSON;
+      json += JSON.stringify(key) + ':' + valueJSON;
     }
   } else {
-    const keys = qsort(Object.keys(input));
+    const keys = Object.keys(input).sort();
 
     for (let i = 0; i < keys.length; ++i) {
       value = input[keys[i]];
@@ -181,7 +179,7 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
         json += ',';
       }
       isSeparated = true;
-      json += jsonStringify(keys[i]) + ':' + valueJSON;
+      json += JSON.stringify(keys[i]) + ':' + valueJSON;
     }
   }
 

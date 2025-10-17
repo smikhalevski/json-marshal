@@ -10,11 +10,10 @@
  *
  * @module adapter/map
  */
-import { compareKeys } from '../utils';
-import { dehydrate } from '../dehydrate';
-import { SerializationAdapter } from '../types';
-import { TAG_MAP } from '../constants';
-import { qsort } from 'algomatic';
+import { compareKeys } from '../utils.js';
+import { dehydrate } from '../dehydrate.js';
+import { SerializationAdapter } from '../types.js';
+import { TAG_MAP } from '../constants.js';
 
 export default function mapAdapter(): SerializationAdapter {
   return adapter;
@@ -52,7 +51,7 @@ const adapter: SerializationAdapter<Map<any, any>, readonly any[]> = {
       return entries;
     }
 
-    qsort(entries, undefined, compareKeys);
+    entries.sort(compareKeys);
 
     for (let i = 0; i < entries.length; ++i) {
       entries[i] = entries[i][1];

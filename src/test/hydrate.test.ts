@@ -1,5 +1,6 @@
-import { SerializationAdapter } from '../main';
-import { hydrate } from '../main/hydrate';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { SerializationAdapter } from '../main/types.js';
+import { hydrate } from '../main/hydrate.js';
 import {
   TAG_ARRAY,
   TAG_BIGINT,
@@ -8,7 +9,7 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from '../main/constants';
+} from '../main/constants.js';
 
 describe('null', () => {
   test('preserves null as is', () => {
@@ -127,7 +128,7 @@ describe('ref', () => {
   });
 
   test('throws if reference is not found', () => {
-    expect(() => hydrate({ aaa: [TAG_REF, 1] }, new Map(), {})).toThrow(new Error('Unresolved reference: 1'));
+    expect(() => hydrate({ aaa: [TAG_REF, 1] }, new Map(), {})).toThrow(new ReferenceError('Unresolved reference: 1'));
   });
 });
 
@@ -155,9 +156,9 @@ describe('bigint', () => {
 });
 
 describe('adapters', () => {
-  const canPackMock = jest.fn();
-  const packMock = jest.fn();
-  const unpackMock = jest.fn();
+  const canPackMock = vi.fn();
+  const packMock = vi.fn();
+  const unpackMock = vi.fn();
 
   const adapterMock: SerializationAdapter = {
     tag: 222,

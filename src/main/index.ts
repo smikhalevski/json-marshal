@@ -8,18 +8,18 @@
  * @module json-marshal
  */
 
-import arrayBufferAdapter from './adapter/array-buffer';
-import dateAdapter from './adapter/date';
-import errorAdapter from './adapter/error';
-import mapAdapter from './adapter/map';
-import regexpAdapter from './adapter/regexp';
-import setAdapter from './adapter/set';
-import { dehydrate } from './dehydrate';
-import { hydrate } from './hydrate';
-import { SerializationOptions } from './types';
-import { checkAdapterTypes } from './utils';
+import arrayBufferAdapter from './adapter/array-buffer.js';
+import dateAdapter from './adapter/date.js';
+import errorAdapter from './adapter/error.js';
+import mapAdapter from './adapter/map.js';
+import regexpAdapter from './adapter/regexp.js';
+import setAdapter from './adapter/set.js';
+import { dehydrate } from './dehydrate.js';
+import { hydrate } from './hydrate.js';
+import { SerializationOptions, Serializer } from './types.js';
+import { checkAdapterTypes } from './utils.js';
 
-export type { SerializationOptions, SerializationAdapter } from './types';
+export type { Dehydrated, SerializationOptions, SerializationAdapter, Serializer } from './types.js';
 
 const defaultOptions: Readonly<SerializationOptions> = {
   adapters: undefined,
@@ -56,12 +56,15 @@ export function stringify(value: any, options = defaultOptions): string {
  *
  * @param options Serialization options.
  */
-export function createSerializer(options = defaultOptions): JSON {
+export function createSerializer(options = defaultOptions): Serializer {
   return {
-    [Symbol.toStringTag]: 'JSONMarshal',
+    parse(json) {
+      return parse(json, options);
+    },
 
-    parse: json => parse(json, options),
-    stringify: value => stringify(value, options),
+    stringify(value) {
+      return stringify(value, options);
+    },
   };
 }
 

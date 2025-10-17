@@ -2,63 +2,28 @@
   "name": "json-marshal",
   "version": "0.0.4",
   "description": "JSON serializer that can stringify and parse any data type.",
+  "type": "module",
   "main": "./index.js",
-  "module": "./index.mjs",
   "types": "./index.d.ts",
   "exports": {
-    ".": {
-      "types": "./index.d.ts",
-      "import": "./index.mjs",
-      "require": "./index.js"
-    },
-    "./dehydrate": {
-      "types": "./adapter/dehydrate.d.ts",
-      "import": "./adapter/dehydrate.mjs",
-      "require": "./adapter/dehydrate.js"
-    },
-    "./hydrate": {
-      "types": "./adapter/hydrate.d.ts",
-      "import": "./adapter/hydrate.mjs",
-      "require": "./adapter/hydrate.js"
-    },
-    "./adapter/array-buffer": {
-      "types": "./adapter/array-buffer.d.ts",
-      "import": "./adapter/array-buffer.mjs",
-      "require": "./adapter/array-buffer.js"
-    },
-    "./adapter/date": {
-      "types": "./adapter/date.d.ts",
-      "import": "./adapter/date.mjs",
-      "require": "./adapter/date.js"
-    },
-    "./adapter/error": {
-      "types": "./adapter/error.d.ts",
-      "import": "./adapter/error.mjs",
-      "require": "./adapter/error.js"
-    },
-    "./adapter/map": {
-      "types": "./adapter/map.d.ts",
-      "import": "./adapter/map.mjs",
-      "require": "./adapter/map.js"
-    },
-    "./adapter/regexp": {
-      "types": "./adapter/regexp.d.ts",
-      "import": "./adapter/regexp.mjs",
-      "require": "./adapter/regexp.js"
-    },
-    "./adapter/set": {
-      "types": "./adapter/set.d.ts",
-      "import": "./adapter/set.mjs",
-      "require": "./adapter/set.js"
-    },
+    ".": "./index.js",
+    "./dehydrate": "./adapter/dehydrate.js",
+    "./hydrate": "./adapter/hydrate.js",
+    "./adapter/array-buffer": "./adapter/array-buffer.js",
+    "./adapter/date": "./adapter/date.js",
+    "./adapter/error": "./adapter/error.js",
+    "./adapter/map": "./adapter/map.js",
+    "./adapter/regexp": "./adapter/regexp.js",
+    "./adapter/set": "./adapter/set.js",
     "./package.json": "./package.json"
   },
   "sideEffects": false,
   "scripts": {
-    "build": "rollup --config && cp package.json README.md LICENSE.txt lib/ && cd lib && npm pkg delete scripts devDependencies",
+    "build": "tsc --project tsconfig.build.json && cp package.json README.md LICENSE.txt lib/ && cd lib && npm pkg delete scripts devDependencies",
     "clean": "rimraf lib docs coverage",
-    "test": "jest",
-    "perf": "NODE_NO_WARNINGS=1 node --experimental-require-module node_modules/.bin/toofast",
+    "test": "TZ=UTC vitest run",
+    "test:definitions": "tsd --typings lib/index.d.ts --files src/main/global.d.ts --files 'src/test/**/*.test-d.ts'",
+    "perf": "NODE_OPTIONS=--experimental-require-module toofast",
     "docs": "typedoc"
   },
   "repository": {
@@ -80,25 +45,17 @@
   },
   "homepage": "https://github.com/smikhalevski/json-marshal#readme",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^12.1.2",
-    "@swc/core": "^1.11.11",
-    "@swc/jest": "^0.2.37",
-    "@types/jest": "^29.5.14",
-    "devalue": "^5.1.1",
+    "@types/node": "^24.8.1",
+    "devalue": "^5.4.1",
     "fast-json-stable-stringify": "^2.1.0",
     "flatted": "^3.3.3",
-    "jest": "^29.7.0",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
-    "rollup": "^4.36.0",
-    "toofast": "^2.0.0",
+    "toofast": "^3.0.3",
     "tslib": "^2.8.1",
-    "typedoc": "^0.26.11",
-    "typedoc-custom-css": "github:smikhalevski/typedoc-custom-css#master",
-    "typedoc-plugin-mdn-links": "^4.0.1",
-    "typescript": "^5.6.3"
-  },
-  "dependencies": {
-    "algomatic": "^4.0.0"
+    "typedoc": "^0.28.14",
+    "typedoc-plugin-mdn-links": "^5.0.10",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }

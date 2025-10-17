@@ -1,4 +1,4 @@
-import { SerializationOptions } from './types';
+import { SerializationOptions } from './types.js';
 import {
   TAG_ARRAY,
   TAG_BIGINT,
@@ -7,7 +7,7 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from './constants';
+} from './constants.js';
 
 const { isArray } = Array;
 const { isInteger } = Number;

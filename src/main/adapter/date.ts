@@ -10,8 +10,8 @@
  *
  * @module adapter/date
  */
-import { SerializationAdapter } from '../types';
-import { TAG_DATE } from '../constants';
+import { SerializationAdapter } from '../types.js';
+import { TAG_DATE } from '../constants.js';
 
 export default function dateAdapter(): SerializationAdapter {
   return adapter;

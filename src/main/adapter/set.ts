@@ -10,11 +10,10 @@
  *
  * @module adapter/set
  */
-import { compareKeys } from '../utils';
-import { dehydrate } from '../dehydrate';
-import { SerializationAdapter } from '../types';
-import { TAG_SET } from '../constants';
-import { qsort } from 'algomatic';
+import { compareKeys } from '../utils.js';
+import { dehydrate } from '../dehydrate.js';
+import { SerializationAdapter } from '../types.js';
+import { TAG_SET } from '../constants.js';
 
 export default function setAdapter(): SerializationAdapter {
   return adapter;
@@ -52,7 +51,7 @@ const adapter: SerializationAdapter<Set<any>, readonly any[]> = {
       return items;
     }
 
-    qsort(items, undefined, compareKeys);
+    items.sort(compareKeys);
 
     for (let i = 0; i < items.length; ++i) {
       items[i] = items[i][1];

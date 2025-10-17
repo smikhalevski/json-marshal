@@ -1,6 +1,7 @@
-import { dehydrate } from '../../main/dehydrate';
-import setAdapter from '../../main/adapter/set';
-import { TAG_SET, TAG_UNDEFINED } from '../../main/constants';
+import { test, expect } from 'vitest';
+import { dehydrate } from '../../main/dehydrate.js';
+import setAdapter from '../../main/adapter/set.js';
+import { TAG_SET, TAG_UNDEFINED } from '../../main/constants.js';
 
 test('zero-size Set is stringified as a tag', () => {
   expect(dehydrate(new Set(), new Map(), { adapters: [setAdapter()] })).toBe('[' + TAG_SET + ',[]]');

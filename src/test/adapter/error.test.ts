@@ -1,4 +1,5 @@
-import errorAdapter from '../../main/adapter/error';
+import { test, expect } from 'vitest';
+import errorAdapter from '../../main/adapter/error.js';
 
 const adapter = errorAdapter();
 
@@ -12,6 +13,6 @@ test('restores error name', () => {
 
   expect(payload).toStrictEqual(['Zzz', 'aaa', 0]);
 
-  expect(value).toStrictEqual(new Error('aaa'));
   expect(value.name).toBe('Zzz');
+  expect(value.message).toBe('aaa');
 });

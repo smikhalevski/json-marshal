@@ -10,8 +10,8 @@
  *
  * @module adapter/regexp
  */
-import { SerializationAdapter } from '../types';
-import { TAG_REGEXP } from '../constants';
+import { SerializationAdapter } from '../types.js';
+import { TAG_REGEXP } from '../constants.js';
 
 export default function regexpAdapter(): SerializationAdapter {
   return adapter;

@@ -1,12 +1,13 @@
-import defaultSerializer, { parse, stringify } from '../main';
-import arrayBufferAdapter from '../main/adapter/array-buffer';
-import dateAdapter from '../main/adapter/date';
-import errorAdapter from '../main/adapter/error';
-import mapAdapter from '../main/adapter/map';
-import regexpAdapter from '../main/adapter/regexp';
-import setAdapter from '../main/adapter/set';
-import testValue from './test.json';
-import { TAG_ARRAY_BUFFER, TAG_DATE, TAG_ERROR, TAG_MAP, TAG_REF, TAG_REGEXP, TAG_SET } from '../main/constants';
+import { expect, test } from 'vitest';
+import defaultSerializer, { parse, stringify } from '../main/index.js';
+import arrayBufferAdapter from '../main/adapter/array-buffer.js';
+import dateAdapter from '../main/adapter/date.js';
+import errorAdapter from '../main/adapter/error.js';
+import mapAdapter from '../main/adapter/map.js';
+import regexpAdapter from '../main/adapter/regexp.js';
+import setAdapter from '../main/adapter/set.js';
+import testValue from './test.json' with { type: 'json' };
+import { TAG_ARRAY_BUFFER, TAG_DATE, TAG_ERROR, TAG_MAP, TAG_REF, TAG_REGEXP, TAG_SET } from '../main/constants.js';
 
 test('test.json', () => {
   expect(parse(stringify(testValue))).toStrictEqual(testValue);

@@ -18,7 +18,7 @@ export interface SerializationAdapter<Value = any, Payload = any> {
   tag: number;
 
   /**
-   * Returns `true` if the adapter can {@link pack} the {@link value}.
+   * Returns `true` if the adapter can {@link pack} the value.
    *
    * @param value The value to get the type tag of.
    * @param options Serialization options.
@@ -32,7 +32,7 @@ export interface SerializationAdapter<Value = any, Payload = any> {
    * references. If the value itself is returned from this method, then the serialization would proceed as if adapter
    * wasn't applied.
    *
-   * If `undefined` is returned then {@link value} isn't serialized.
+   * If `undefined` is returned then value isn't serialized.
    *
    * @param value The value for which a payload must be produced.
    * @param options Serialization options.
@@ -77,4 +77,10 @@ export interface SerializationOptions {
    * @default false
    */
   isUndefinedPropertyValuesPreserved?: boolean;
+}
+
+export interface Serializer {
+  parse(json: string): any;
+
+  stringify(value: any): string;
 }

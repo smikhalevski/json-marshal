@@ -1,4 +1,5 @@
-import { parse, SerializationAdapter, stringify } from '../main';
+import { expect, test } from 'vitest';
+import { parse, SerializationAdapter, stringify } from '../main/index.js';
 
 test('setAdapter', () => {
   const setAdapter: SerializationAdapter<Set<any>, any[]> = {
@@ -8,17 +9,17 @@ test('setAdapter', () => {
       return value instanceof Set;
     },
 
-    pack(value, options) {
+    pack(value, _options) {
       return Array.from(value);
     },
 
-    unpack(payload, options) {
+    unpack(_payload, _options) {
       // Return an empty set, because payload doesn't contain
       // hydrated values at this stage
       return new Set();
     },
 
-    hydrate(value, payload, options) {
+    hydrate(value, payload, _options) {
       // Add hydrated items to set
       for (const item of payload) {
         value.add(item);

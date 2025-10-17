@@ -12,9 +12,9 @@
  * @module adapter/array-buffer
  */
 
-import { decodeBase64, encodeBase64 } from '../utils';
-import { SerializationAdapter } from '../types';
-import { TAG_ARRAY_BUFFER } from '../constants';
+import { decodeBase64, encodeBase64 } from '../utils.js';
+import { SerializationAdapter } from '../types.js';
+import { TAG_ARRAY_BUFFER } from '../constants.js';
 
 export default function arrayBufferAdapter(): SerializationAdapter {
   return adapter;

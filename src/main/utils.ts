@@ -1,4 +1,4 @@
-import { SerializationAdapter } from './types';
+import { SerializationAdapter } from './types.js';
 
 const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -8,7 +8,7 @@ for (let i = 0; i < BASE64_CHARS.length; ++i) {
   lookup[BASE64_CHARS.charCodeAt(i)] = i;
 }
 
-export function manualEncodeBase64(buffer: ArrayBuffer): string {
+export function manualEncodeBase64(buffer: ArrayBufferLike): string {
   const bytes = new Uint8Array(buffer);
   const bytesLength = bytes.length;
 
@@ -60,7 +60,7 @@ export function manualDecodeBase64(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-function bufferEncodeBase64(buffer: ArrayBuffer): string {
+function bufferEncodeBase64(buffer: ArrayBufferLike): string {
   return Buffer.from(buffer).toString('base64');
 }
 

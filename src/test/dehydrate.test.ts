@@ -1,6 +1,7 @@
-import { SerializationAdapter } from '../main';
-import mapAdapter from '../main/adapter/map';
-import { dehydrate } from '../main/dehydrate';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { SerializationAdapter } from '../main/types.js';
+import mapAdapter from '../main/adapter/map.js';
+import { dehydrate } from '../main/dehydrate.js';
 import {
   TAG_ARRAY,
   TAG_BIGINT,
@@ -10,7 +11,7 @@ import {
   TAG_POSITIVE_INFINITY,
   TAG_REF,
   TAG_UNDEFINED,
-} from '../main/constants';
+} from '../main/constants.js';
 
 describe('null', () => {
   test('stringified as null', () => {
@@ -135,9 +136,9 @@ describe('object', () => {
 });
 
 describe('adapter', () => {
-  const canPackMock = jest.fn();
-  const packMock = jest.fn();
-  const unpackMock = jest.fn();
+  const canPackMock = vi.fn();
+  const packMock = vi.fn();
+  const unpackMock = vi.fn();
 
   const adapterMock: SerializationAdapter = {
     tag: 111,
