@@ -14,7 +14,7 @@ export function manualEncodeBase64(buffer: ArrayBufferLike): string {
 
   let base64 = '';
 
-  for (let i = 0, a, b, c = 0; i < bytesLength; ) {
+  for (let i = 0, a, b, c; i < bytesLength; ) {
     a = bytes[i++];
     b = bytes[i++];
     c = bytes[i++];

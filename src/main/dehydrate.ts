@@ -109,25 +109,22 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
 
   if (isArray(input)) {
     let str = '';
-    let value0;
 
-    for (let separated = false, i = 0; i < input.length; ++i) {
+    for (let isSeparated = false, i = 0; i < input.length; ++i) {
       const valueStr = dehydrate(input[i], refs, options);
 
       if (valueStr === undefined) {
         continue;
       }
-      if (separated) {
+      if (isSeparated) {
         str += ',';
-      } else {
-        separated = true;
-        value0 = input[i];
       }
+      isSeparated = true;
       str += valueStr;
     }
 
     // Regular array
-    if (typeof value0 !== 'number') {
+    if (input.length === 0 || typeof input[0] !== 'number') {
       return '[' + str + ']';
     }
 
@@ -136,52 +133,33 @@ export function dehydrate(input: any, refs: Map<any, number>, options: Serializa
   }
 
   // Object
-  let json = '';
-  let value;
-  let valueJSON;
+  let str = '';
   let isSeparated = false;
 
-  if (!options.isStable) {
-    for (const key in input) {
-      value = input[key];
+  const keys = Object.keys(input);
 
-      if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
-        continue;
-      }
-
-      valueJSON = dehydrate(value, refs, options);
-
-      if (valueJSON === undefined) {
-        continue;
-      }
-      if (isSeparated) {
-        json += ',';
-      }
-      isSeparated = true;
-      json += JSON.stringify(key) + ':' + valueJSON;
-    }
-  } else {
-    const keys = Object.keys(input).sort();
-
-    for (let i = 0; i < keys.length; ++i) {
-      value = input[keys[i]];
-
-      if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
-        continue;
-      }
-
-      valueJSON = dehydrate(value, refs, options);
-
-      if (valueJSON === undefined) {
-        continue;
-      }
-      if (isSeparated) {
-        json += ',';
-      }
-      isSeparated = true;
-      json += JSON.stringify(keys[i]) + ':' + valueJSON;
-    }
+  if (options.isStable) {
+    keys.sort();
   }
 
-  return '{' + json + '}';
+  for (let i = 0; i < keys.length; ++i) {
+    const value = input[keys[i]];
+
+    if (value === undefined && !options.isUndefinedPropertyValuesPreserved) {
+      continue;
+    }
+
+    const valueStr = dehydrate(value, refs, options);
+
+    if (valueStr === undefined) {
+      continue;
+    }
+    if (isSeparated) {
+      str += ',';
+    }
+    isSeparated = true;
+    str += JSON.stringify(keys[i]) + ':' + valueStr;
+  }
+
+  return '{' + str + '}';
 }

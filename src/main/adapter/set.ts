@@ -39,10 +39,10 @@ const adapter: SerializationAdapter<Set<any>, readonly any[]> = {
     const refs = new Map();
 
     for (const item of value) {
-      const itemJSON = dehydrate(item, refs, options);
+      const itemStr = dehydrate(item, refs, options);
 
-      if (itemJSON !== undefined) {
-        items.push([itemJSON, item]);
+      if (itemStr !== undefined) {
+        items.push([itemStr, item]);
       }
       refs.clear();
     }

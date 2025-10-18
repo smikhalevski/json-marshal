@@ -39,10 +39,10 @@ const adapter: SerializationAdapter<Map<any, any>, readonly any[]> = {
     const refs = new Map();
 
     for (const entry of value) {
-      const keyJSON = dehydrate(entry[0], refs, options);
+      const keyStr = dehydrate(entry[0], refs, options);
 
-      if (keyJSON !== undefined) {
-        entries.push([keyJSON, entry]);
+      if (keyStr !== undefined) {
+        entries.push([keyStr, entry]);
       }
       refs.clear();
     }
