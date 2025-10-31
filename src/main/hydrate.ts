@@ -115,5 +115,5 @@ export function hydrate(input: any, refs: Map<number, any>, options: Serializati
     }
   }
 
-  throw new Error('Adapter not found for tag: ' + tag);
+  throw new Error('No adapter for tag: ' + tag);
 }

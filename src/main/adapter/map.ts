@@ -10,7 +10,6 @@
  *
  * @module adapter/map
  */
-import { compareKeys } from '../utils.js';
 import { dehydrate } from '../dehydrate.js';
 import { SerializationAdapter } from '../types.js';
 import { TAG_MAP } from '../constants.js';
@@ -72,3 +71,7 @@ const adapter: SerializationAdapter<Map<any, any>, readonly any[]> = {
     }
   },
 };
+
+function compareKeys(a: any[], b: any[]): number {
+  return a[0] === b[0] ? 0 : a[0] < b[0] ? -1 : 1;
+}

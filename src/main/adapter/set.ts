@@ -10,7 +10,6 @@
  *
  * @module adapter/set
  */
-import { compareKeys } from '../utils.js';
 import { dehydrate } from '../dehydrate.js';
 import { SerializationAdapter } from '../types.js';
 import { TAG_SET } from '../constants.js';
@@ -70,3 +69,7 @@ const adapter: SerializationAdapter<Set<any>, readonly any[]> = {
     }
   },
 };
+
+function compareKeys(a: any[], b: any[]): number {
+  return a[0] === b[0] ? 0 : a[0] < b[0] ? -1 : 1;
+}

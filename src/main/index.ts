@@ -17,7 +17,6 @@ import setAdapter from './adapter/set.js';
 import { dehydrate } from './dehydrate.js';
 import { hydrate } from './hydrate.js';
 import { SerializationOptions, Serializer } from './types.js';
-import { checkAdapterTypes } from './utils.js';
 
 export type { Dehydrated, SerializationOptions, SerializationAdapter, Serializer } from './types.js';
 
@@ -46,8 +45,6 @@ export function parse(json: string, options = defaultOptions): any {
  * @param options Serialization options.
  */
 export function stringify(value: any, options = defaultOptions): string {
-  checkAdapterTypes(options.adapters);
-
   return dehydrate(value, new Map(), options)!;
 }
 

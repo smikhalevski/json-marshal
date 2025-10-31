@@ -217,6 +217,6 @@ describe('adapters', () => {
   });
 
   test('throws if no adapter deserialized the value', () => {
-    expect(() => hydrate({ aaa: [222, 'bbb'] }, new Map(), {})).toThrow(new Error('Adapter not found for tag: 222'));
+    expect(() => hydrate({ aaa: [222, 'bbb'] }, new Map(), {})).toThrow(new Error('No adapter for tag: 222'));
   });
 });
